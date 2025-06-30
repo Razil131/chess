@@ -1,0 +1,8 @@
+[
+{
+  "directory": "C:/Users/bossr/Documents/chess_cpp/build",
+  "command": "C:\\msys64\\mingw64\\bin\\c++.exe -g -o CMakeFiles\\chess.dir\\src\\main.cpp.obj -c C:\\Users\\bossr\\Documents\\chess_cpp\\src\\main.cpp",
+  "file": "C:\\Users\\bossr\\Documents\\chess_cpp\\src\\main.cpp",
+  "output": "CMakeFiles\\chess.dir\\src\\main.cpp.obj"
+}
+]
