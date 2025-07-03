@@ -25,7 +25,7 @@ std::vector<std::pair<int, int>> knight::get_available_moves() { //TODO сдел
         int nx = pos.first + o[0];
         int ny = pos.second + o[1];
 
-        if (nx >= 0 && nx < 9 && ny >= 0 && ny < 9) {
+        if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
             moves.push_back({nx, ny});
         }
     }

@@ -27,7 +27,7 @@ std::vector<std::pair<int, int>> pawn::get_available_moves() { //TODO сдела
     if ((team == WHITE && pos.second == 1) ||
         (team == BLACK && pos.second == 6)) {
         ny = pos.second + 2 * direction;
-        if (ny >= 0 && ny < 9) {
+        if (ny >= 0 && ny < 8) {
             moves.push_back({nx, ny});
         }
     }
@@ -36,7 +36,7 @@ std::vector<std::pair<int, int>> pawn::get_available_moves() { //TODO сдела
     for (int dx = -1; dx <= 1; dx += 2) {
         int nx_diag = pos.first + dx;
         int ny_diag = pos.second + direction;
-        if (nx_diag >= 0 && nx_diag < 9 && ny_diag >= 0 && ny_diag < 9) {
+        if (nx_diag >= 0 && nx_diag < 8 && ny_diag >= 0 && ny_diag < 8) {
             moves.push_back({nx_diag, ny_diag});
         }
     }

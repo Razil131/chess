@@ -21,7 +21,7 @@ std::vector<std::pair<int, int>> king::get_available_moves() { //TODO сдела
             int nx = pos.first + dx;
             int ny = pos.second + dy;
 
-            if (nx >= 0 && nx < 9 && ny >= 0 && ny < 9) {
+            if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
                 moves.push_back({nx, ny});
             }
         }
