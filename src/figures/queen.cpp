@@ -28,7 +28,7 @@ std::vector<std::pair<int, int>> queen::get_available_moves() { //TODO сдел�
             nx += d[0];
             ny += d[1];
 
-            if (nx < 0 || nx >= 9 || ny < 0 || ny >= 9)
+            if (nx < 0 || nx > 7 || ny < 0 || ny >= 7)
                 break;
 
             moves.push_back({nx, ny});

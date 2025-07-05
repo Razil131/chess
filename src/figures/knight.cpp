@@ -14,7 +14,7 @@ knight::knight(teams t, std::pair<int,int> p) {
 std::vector<std::pair<int, int>> knight::get_available_moves() { //TODO сделать чтобы противники учитывались там передавать доску и проверять
     std::vector<std::pair<int, int>> moves;
 
-    const int offsets[8][2] = {
+    const int offsets[8][2] = { //все возможные ходы коня
         {+2, +1}, {+2, -1},
         {-2, +1}, {-2, -1},
         {+1, +2}, {+1, -2},
@@ -25,7 +25,7 @@ std::vector<std::pair<int, int>> knight::get_available_moves() { //TODO сдел
         int nx = pos.first + o[0];
         int ny = pos.second + o[1];
 
-        if (nx >= 0 && nx < 9 && ny >= 0 && ny < 9) {
+        if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
             moves.push_back({nx, ny});
         }
     }
