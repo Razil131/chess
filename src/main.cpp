@@ -1,8 +1,18 @@
 #include <iostream>
+#include "debug_utils.hpp"
+#include "board.hpp"
 
-int main(int, char**){
-    std::cout << "Hello, from chess!\n";
+int main() {
+    Board board;
+    board.initialize();
+    printBoard(board);
+    std::cout << std::endl;
+    board.makeMove(std::make_pair(0, 1), std::make_pair(0, 2));
+    printBoard(board);
+    std::cout << std::endl;
+    board.makeMove(std::make_pair(0, 0), std::make_pair(0, 1));
+    printBoard(board);
+    std::cout << std::endl;
+    board.makeMove(std::make_pair(1, 0), std::make_pair(1, 2));
+    printBoard(board);
 }
-//TODO чисто точка входа здесь просто создаем доску и запускаем
-//TODO выбрать на чет писать интерфейс SFML SDL2 DearImGui Allergo 
-//TODO выбрать как отрисовывать поле прям квадраты рисовать или просто картинку вставить

@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 
+class Board;
+
 class figure { //общий класс фигур
 public:
     enum teams { BLACK, WHITE }; //цвет
@@ -28,5 +30,5 @@ public:// хз как правильно эти public расположить ч
     virtual void setFigureType(const figureTypes new_figureType);
     virtual std::string getIconPath();
 
-    virtual std::vector<std::pair<int, int>> get_available_moves() = 0; //виртуальный метод чисто для наследования
+    virtual std::vector<std::pair<int, int>> get_available_moves(const Board& board) = 0; //виртуальный метод чисто для наследования
 };

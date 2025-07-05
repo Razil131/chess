@@ -11,7 +11,7 @@ king::king(teams t, std::pair<int,int> p) {
             iconPath = "/materials/nb.png";
 }
 
-std::vector<std::pair<int, int>> king::get_available_moves() { //TODO сделать чтобы противники учитывались там передавать доску и проверять
+std::vector<std::pair<int, int>> king::get_available_moves(const Board& board) { //TODO сделать чтобы противники учитывались там передавать доску и проверять
     std::vector<std::pair<int, int>> moves;
 
     for (int dx = -1; dx <= 1; ++dx) {
