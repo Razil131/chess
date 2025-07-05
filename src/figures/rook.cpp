@@ -11,7 +11,7 @@ rook::rook(teams t, std::pair<int,int> p) {
             iconPath = "/materials/rb.png";
 }
 
-std::vector<std::pair<int, int>> rook::get_available_moves() { //TODO сделать чтобы противники учитывались там передавать доску и проверять
+std::vector<std::pair<int, int>> rook::get_available_moves(const Board& board) { //TODO сделать чтобы противники учитывались там передавать доску и проверять
     std::vector<std::pair<int, int>> moves;
 
     const int directions[4][2] = {

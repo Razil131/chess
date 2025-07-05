@@ -11,7 +11,7 @@ pawn::pawn(teams t, std::pair<int,int> p) {
             iconPath = "/materials/pb.png";
 }
 
-std::vector<std::pair<int, int>> pawn::get_available_moves() { //TODO сделать чтобы противники учитывались там передавать доску и проверять
+std::vector<std::pair<int, int>> pawn::get_available_moves(const Board& board) { //TODO сделать чтобы противники учитывались там передавать доску и проверять
     std::vector<std::pair<int, int>> moves;
 
     int direction = (team == WHITE) ? +1 : -1;
