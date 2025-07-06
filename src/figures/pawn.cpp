@@ -1,4 +1,5 @@
 #include "../../include/pawn.hpp"
+#include "board.hpp"
 
 pawn::pawn(teams t, std::pair<int,int> p) {
         team = t;
@@ -11,7 +12,7 @@ pawn::pawn(teams t, std::pair<int,int> p) {
             iconPath = "/materials/pb.png";
 }
 
-std::vector<std::pair<int, int>> pawn::get_available_moves(const Board& board) { //TODO сделать чтобы противники учитывались там передавать доску и проверять
+std::vector<std::pair<int, int>> pawn::get_available_moves(const Board& board) {
     std::vector<std::pair<int, int>> moves;
 
     int direction = (team == WHITE) ? +1 : -1;
@@ -19,27 +20,22 @@ std::vector<std::pair<int, int>> pawn::get_available_moves(const Board& board) {
     int nx = pos.first;
     int ny = pos.second + direction;
 
-    if (ny >= 0 && ny < 9) {
-        moves.push_back({nx, ny});
-    }
-
-    // первый ход на 2 клетки мб как то по другому сделать
-    if ((team == WHITE && pos.second == 1) ||
-        (team == BLACK && pos.second == 6)) {
-        ny = pos.second + 2 * direction;
-        if (ny >= 0 && ny < 8) {
+        if (ny >= 0 && ny < 8) { //чисто ходить прямо
+        if (!board.isOccupied(nx, ny)) {
             moves.push_back({nx, ny});
         }
     }
 
-    // TODO можно есть(кушать убивать пожирать жрать) по диагонали но ходить по диаганали низя
-    for (int dx = -1; dx <= 1; dx += 2) {
-        int nx_diag = pos.first + dx;
-        int ny_diag = pos.second + direction;
-        if (nx_diag >= 0 && nx_diag < 8 && ny_diag >= 0 && ny_diag < 8) {
-            moves.push_back({nx_diag, ny_diag});
+    if ((team == WHITE && pos.second == 1) || (team == BLACK && pos.second == 6)) { //если на начальной клетке стоит, то может ходить на 2 клетки
+        int ny_one_step = pos.second + direction; //на одну клетку
+        int ny_two_steps = pos.second + 2 * direction; //на две
+
+        if (!board.isOccupied(nx, ny_one_step) && !board.isOccupied(nx, ny_two_steps) && ny_two_steps >= 0 && ny_two_steps < 8) {
+            moves.push_back({nx, ny_two_steps}); //проверяем все условия и если можем, идем шагаем на две клетки
         }
     }
 
     return moves;
 }
+
+//TODO сделать взятие по диагонали и превращение пешки в другую фигуру
