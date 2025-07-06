@@ -1,4 +1,4 @@
-#include "../include/figure.hpp"
+#include "figure.hpp"
 
 figure::teams figure::getTeam() {
         return team;
@@ -28,3 +28,13 @@ std::string figure::getIconPath() {
 void figure::setFigureType(const figure::figureTypes new_figureType) {
     figureType = new_figureType;
 }
+
+
+sf::Sprite* figure::getSprite(){
+    return &sprite;
+}
+
+void figure::setSprite(const sf::Sprite new_sprite){
+    sprite = new_sprite;
+}
+

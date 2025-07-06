@@ -1,9 +1,9 @@
 #include <cmath>
-#include "../../include/bishop.hpp"
+#include "bishop.hpp"
 #include "board.hpp"
 
-bishop::bishop(teams t, std::pair<int,int> p) {
-        team = t; //конструктор
+bishop::bishop(teams t, std::pair<int,int> p) { //конструктор
+        team = t; 
         pos = p;
         figureType = BISHOP;
 
@@ -11,6 +11,19 @@ bishop::bishop(teams t, std::pair<int,int> p) {
             iconPath = "/materials/bw.png";
         else
             iconPath = "/materials/bb.png";
+}
+
+bishop::bishop(teams t, std::pair<int,int> p, sf::Texture& texture) { // доп конструктор только для gui с текстурой
+        team = t; 
+        pos = p;
+        figureType = BISHOP;
+
+        if (team == WHITE)
+            iconPath = "/materials/bw.png";
+        else
+            iconPath = "/materials/bb.png";
+        sprite.setTexture(texture);
+        sprite.setScale(1.2f, 1.2f);
 }
 
 std::vector<std::pair<int, int>> bishop::get_available_moves(const Board& board) {

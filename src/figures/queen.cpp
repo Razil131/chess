@@ -1,7 +1,18 @@
-#include "../../include/queen.hpp"
+#include "queen.hpp"
 #include "board.hpp"
 
-queen::queen(teams t, std::pair<int,int> p) {
+queen::queen(teams t, std::pair<int,int> p) { //конструктор
+        team = t; 
+        pos = p;
+        figureType = BISHOP;
+
+        if (team == WHITE)
+            iconPath = "/materials/bw.png";
+        else
+            iconPath = "/materials/bb.png";
+}
+
+queen::queen(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
         team = t;
         pos = p;
         figureType = QUEEN;
@@ -10,6 +21,8 @@ queen::queen(teams t, std::pair<int,int> p) {
             iconPath = "/materials/qw.png";
         else
             iconPath = "/materials/qb.png";
+        sprite.setTexture(texture);
+        sprite.setScale(1.2f, 1.2f);
 }
 
 std::vector<std::pair<int, int>> queen::get_available_moves(const Board& board) {

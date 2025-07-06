@@ -1,7 +1,18 @@
-#include "../../include/pawn.hpp"
+#include "pawn.hpp"
 #include "board.hpp"
 
-pawn::pawn(teams t, std::pair<int,int> p) {
+pawn::pawn(teams t, std::pair<int,int> p) { //конструктор
+        team = t; 
+        pos = p;
+        figureType = BISHOP;
+
+        if (team == WHITE)
+            iconPath = "/materials/bw.png";
+        else
+            iconPath = "/materials/bb.png";
+}
+
+pawn::pawn(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
         team = t;
         pos = p;
         figureType = PAWN;
@@ -10,6 +21,8 @@ pawn::pawn(teams t, std::pair<int,int> p) {
             iconPath = "/materials/pw.png";
         else
             iconPath = "/materials/pb.png";
+        sprite.setTexture(texture);
+        sprite.setScale(1.2f, 1.2f);
 }
 
 std::vector<std::pair<int, int>> pawn::get_available_moves(const Board& board) {
@@ -20,7 +33,7 @@ std::vector<std::pair<int, int>> pawn::get_available_moves(const Board& board) {
     int nx = pos.first;
     int ny = pos.second + direction;
 
-        if (ny >= 0 && ny < 8) { //чисто ходить прямо
+    if (ny >= 0 && ny < 8) { //чисто ходить прямо
         if (!board.isOccupied(nx, ny)) {
             moves.push_back({nx, ny});
         }

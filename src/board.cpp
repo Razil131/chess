@@ -16,7 +16,7 @@ Board::Board() {
 
 figure* Board::getFigure(int x, int y) const{ //функция для возвращения указателя на фигуру
     if(x >= 0 && x < 8 && y >= 0 && y < 8){
-        return board[x][y].get(); //если че то есть, вернет указатель
+        return board[y][x].get(); //если че то есть, вернет указатель #FIXED тут было x y а не y x
     }
     return nullptr; //если ничего нет
 }

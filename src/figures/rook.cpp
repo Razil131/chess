@@ -1,7 +1,18 @@
-#include "../../include/rook.hpp"
+#include "rook.hpp"
 #include "board.hpp"
 
-rook::rook(teams t, std::pair<int,int> p) {
+rook::rook(teams t, std::pair<int,int> p) { //конструктор
+        team = t; 
+        pos = p;
+        figureType = BISHOP;
+
+        if (team == WHITE)
+            iconPath = "/materials/bw.png";
+        else
+            iconPath = "/materials/bb.png";
+}
+
+rook::rook(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
         team = t;
         pos = p;
         figureType = ROOK;
@@ -10,6 +21,8 @@ rook::rook(teams t, std::pair<int,int> p) {
             iconPath = "/materials/rw.png";
         else
             iconPath = "/materials/rb.png";
+        sprite.setTexture(texture);
+        sprite.setScale(1.2f, 1.2f);
 }
 
 std::vector<std::pair<int, int>> rook::get_available_moves(const Board& board) { 

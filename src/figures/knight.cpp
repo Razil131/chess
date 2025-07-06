@@ -1,7 +1,19 @@
-#include "../../include/knight.hpp"
+#include "knight.hpp"
 #include "board.hpp"
 
-knight::knight(teams t, std::pair<int,int> p) {
+knight::knight(teams t, std::pair<int,int> p) { //конструктор
+        team = t; 
+        pos = p;
+        figureType = BISHOP;
+
+        if (team == WHITE)
+            iconPath = "/materials/bw.png";
+        else
+            iconPath = "/materials/bb.png";
+}
+
+
+knight::knight(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
         team = t;
         pos = p;
         figureType = KNIGHT;
@@ -10,6 +22,8 @@ knight::knight(teams t, std::pair<int,int> p) {
             iconPath = "/materials/kw.png";
         else
             iconPath = "/materials/kb.png";
+        sprite.setTexture(texture);
+        sprite.setScale(1.2f, 1.2f);
 }
 
 std::vector<std::pair<int, int>> knight::get_available_moves(const Board& board) { //TODO сделать чтобы противники учитывались там передавать доску и проверять
