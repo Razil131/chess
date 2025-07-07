@@ -4,12 +4,12 @@
 queen::queen(teams t, std::pair<int,int> p) { //конструктор
         team = t; 
         pos = p;
-        figureType = BISHOP;
+        figureType = QUEEN;
 
         if (team == WHITE)
-            iconPath = "/materials/bw.png";
+            iconPath = "/materials/qw.png";
         else
-            iconPath = "/materials/bb.png";
+            iconPath = "/materials/qb.png";
 }
 
 queen::queen(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой

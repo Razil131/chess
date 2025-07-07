@@ -4,12 +4,12 @@
 pawn::pawn(teams t, std::pair<int,int> p) { //конструктор
         team = t; 
         pos = p;
-        figureType = BISHOP;
+        figureType = PAWN;
 
         if (team == WHITE)
-            iconPath = "/materials/bw.png";
+            iconPath = "/materials/pw.png";
         else
-            iconPath = "/materials/bb.png";
+            iconPath = "/materials/pb.png";
 }
 
 pawn::pawn(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
@@ -35,7 +35,7 @@ std::vector<std::pair<int, int>> pawn::get_available_moves(const Board& board) {
 
     if (ny >= 0 && ny < 8) { //чисто ходить прямо
         if (!board.isOccupied(nx, ny)) {
-            moves.push_back({nx, ny});
+            moves.emplace_back(nx, ny);
         }
     }
 
@@ -44,9 +44,19 @@ std::vector<std::pair<int, int>> pawn::get_available_moves(const Board& board) {
         int ny_two_steps = pos.second + 2 * direction; //на две
 
         if (!board.isOccupied(nx, ny_one_step) && !board.isOccupied(nx, ny_two_steps) && ny_two_steps >= 0 && ny_two_steps < 8) {
-            moves.push_back({nx, ny_two_steps}); //проверяем все условия и если можем, идем шагаем на две клетки
+            moves.emplace_back(nx, ny_two_steps); //проверяем все условия и если можем, идем шагаем на две клетки
         }
     }
+    for(int dx : {-1, +1}){
+            int diag_x = pos.first + dx;
+            int diag_y = pos.second + direction;
+
+            if(diag_x >= 0 && diag_x < 8 && diag_y >= 0 && diag_y < 8) {
+                if (board.isOccupiedByEnemyTeam(diag_x, diag_y, team)) {
+                    moves.emplace_back(diag_x, diag_y);
+                }
+            }
+        }
 
     return moves;
 }

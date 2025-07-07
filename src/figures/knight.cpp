@@ -4,12 +4,12 @@
 knight::knight(teams t, std::pair<int,int> p) { //конструктор
         team = t; 
         pos = p;
-        figureType = BISHOP;
+        figureType = KNIGHT;
 
         if (team == WHITE)
-            iconPath = "/materials/bw.png";
+            iconPath = "/materials/nw.png";
         else
-            iconPath = "/materials/bb.png";
+            iconPath = "/materials/nb.png";
 }
 
 
@@ -19,9 +19,9 @@ knight::knight(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп �
         figureType = KNIGHT;
 
         if (team == WHITE)
-            iconPath = "/materials/kw.png";
+            iconPath = "/materials/nw.png";
         else
-            iconPath = "/materials/kb.png";
+            iconPath = "/materials/nb.png";
         sprite.setTexture(texture);
         sprite.setScale(1.2f, 1.2f);
 }

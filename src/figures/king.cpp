@@ -4,12 +4,12 @@
 king::king(teams t, std::pair<int,int> p) { //конструктор
         team = t; 
         pos = p;
-        figureType = BISHOP;
+        figureType = KING;
 
         if (team == WHITE)
-            iconPath = "/materials/bw.png";
+            iconPath = "/materials/kw.png";
         else
-            iconPath = "/materials/bb.png";
+            iconPath = "/materials/kb.png";
 }
 
 king::king(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
@@ -18,9 +18,9 @@ king::king(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп ко�
         figureType = KING;
 
         if (team == WHITE)
-            iconPath = "/materials/nw.png";
+            iconPath = "/materials/kw.png";
         else
-            iconPath = "/materials/nb.png";
+            iconPath = "/materials/kb.png";
         sprite.setTexture(texture);
         sprite.setScale(1.2f, 1.2f);
 }

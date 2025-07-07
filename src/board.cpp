@@ -7,7 +7,7 @@
 #include "king.hpp"
 #include <algorithm>
 
-Board::Board() {
+Board::Board() : moveCount(0) {
     board.resize(8);
     for (auto& row : board) {
         row.resize(8); // Каждая строка это вектор из8 nullptr
@@ -19,6 +19,10 @@ figure* Board::getFigure(int x, int y) const{ //функция для возвр
         return board[y][x].get(); //если че то есть, вернет указатель #FIXED тут было x y а не y x
     }
     return nullptr; //если ничего нет
+}
+
+figure::teams Board::getCurrentTeam() const{
+    return (moveCount % 2 == 0) ? figure::WHITE : figure::BLACK;
 }
 
 bool Board::isOccupied(int x, int y) const {
@@ -45,6 +49,35 @@ void Board::removeFigure(int x, int y) {
         board[y][x].reset(); // Удаляет фигуру, устанавливает nullptr в ее место
 }
 
+void Board::convertPawn(int x, int y, figure::figureTypes new_type) { //тут переделываем пешку в другую какую нибудь фигуру
+    figure* pawn = getFigure(x, y);
+    if (pawn && pawn->getFigureType() == figure::PAWN) {
+        if ((pawn->getTeam() == figure::WHITE && y == 7) || (pawn->getTeam() == figure::BLACK && y == 0)) { //проверяем, находится ли пешка на последней клетке
+            std::unique_ptr<figure> new_figure;
+
+            switch (new_type) {
+                case figure::QUEEN:
+                    new_figure = std::make_unique<queen>(pawn->getTeam(), std::make_pair(x, y));
+                    break;
+                case figure::ROOK:
+                    new_figure = std::make_unique<rook>(pawn->getTeam(), std::make_pair(x, y));
+                    break;
+                case figure::BISHOP:
+                    new_figure = std::make_unique<bishop>(pawn->getTeam(), std::make_pair(x, y));
+                    break;
+                case figure::KNIGHT:
+                    new_figure = std::make_unique<knight>(pawn->getTeam(), std::make_pair(x, y));
+                    break;
+                default:
+                    new_figure = std::make_unique<queen>(pawn->getTeam(), std::make_pair(x, y));
+                    break;
+            }
+
+            setFigure(x, y, std::move(new_figure));
+        }
+    }
+}
+
 bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
     figure* movingfig = getFigure(from.first, from.second); //получаем нач положение фигуры
     if(!movingfig) return false;
@@ -58,6 +91,15 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
     removeFigure(from.first, from.second);//удаляем фигуру из начального положения
 
     movingfig->setPos(to);//обновляем позицию у самой фигуры
+
+    if(movingfig->getFigureType() == figure::PAWN){
+        if((movingfig->getTeam() == figure::WHITE && to.second == 7) || (movingfig->getTeam() == figure::BLACK && to.second == 0)){
+            convertFlag = true;
+            convertPosition = to;
+        }
+    }
+
+    ++moveCount;
 
     return true; //ход сделан
 }
@@ -75,8 +117,8 @@ void Board::initialize(){ //функция для начального поло�
     }
     //ставим ладьи на их места
     setFigure(0, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(0, 0)));
-    setFigure(7, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(0, 7)));
-    setFigure(0, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(7, 0)));
+    setFigure(7, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(7, 0)));
+    setFigure(0, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(0, 7)));
     setFigure(7, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(7, 7)));
 
     //ставим коней
@@ -99,3 +141,6 @@ void Board::initialize(){ //функция для начального поло�
     setFigure(4, 0, std::make_unique<king>(figure::teams::WHITE, std::make_pair(4, 0)));
     setFigure(4, 7, std::make_unique<king>(figure::teams::BLACK, std::make_pair(4, 7)));
 }
+
+
+
