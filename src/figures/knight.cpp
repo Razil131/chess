@@ -26,7 +26,7 @@ knight::knight(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп �
         sprite.setScale(1.2f, 1.2f);
 }
 
-std::vector<std::pair<int, int>> knight::get_available_moves(const Board& board) { //TODO сделать чтобы противники учитывались там передавать доску и проверять
+std::vector<std::pair<int, int>> knight::get_available_moves(const Board& board) {
     std::vector<std::pair<int, int>> moves;
 
     const std::vector<std::pair<int, int>> directions = { //все возможные ходы коня

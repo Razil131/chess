@@ -47,18 +47,19 @@ std::vector<std::pair<int, int>> pawn::get_available_moves(const Board& board) {
             moves.emplace_back(nx, ny_two_steps); //проверяем все условия и если можем, идем шагаем на две клетки
         }
     }
-    for(int dx : {-1, +1}){
+    for(int dx : {-1, +1}){ 
             int diag_x = pos.first + dx;
             int diag_y = pos.second + direction;
 
-            if(diag_x >= 0 && diag_x < 8 && diag_y >= 0 && diag_y < 8) {
-                if (board.isOccupiedByEnemyTeam(diag_x, diag_y, team)) {
+            if(diag_x < 0 || diag_x >= 8 || diag_y < 0 || diag_y >= 8) continue;
+
+            if (board.isOccupiedByEnemyTeam(diag_x, diag_y, team)) { //Тут взятие по диагонали сделано
                     moves.emplace_back(diag_x, diag_y);
                 }
-            }
+            else if (board.enPassantFlag && board.enPassantPosition == std::make_pair(diag_x, diag_y)) { //взятие на проходе
+            moves.emplace_back(diag_x, diag_y);
         }
-
+            }
     return moves;
 }
 
-//TODO сделать взятие по диагонали и превращение пешки в другую фигуру

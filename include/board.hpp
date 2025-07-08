@@ -22,12 +22,17 @@ public:
     void removeFigure(int x, int y);//удаляет фигуру
     bool makeMove(std::pair<int, int> from, std::pair<int, int> to); //Ход
     void initialize(); //функция для дефолтной расстановки фигур
-    void convertPawn(int x, int y, figure::figureTypes new_type);
+    void convertPawn(int x, int y, figure::figureTypes new_type); //функция превращения пешки в фигуру
+    bool isKingInCheck(figure::teams team) const;
 
-    bool convertFlag = false;
-    std::pair<int, int> convertPosition;
+    bool convertFlag = false; //флаг для convertPawn
+    std::pair<int, int> convertPosition; //позиция пешки, которую надо превратить
+    bool enPassantFlag = false; //флаг для взятия на проходе
+    std::pair<int, int> enPassantPosition; //позиция пешки для взятия на проходе
+    std::pair<std::pair<int, int>, std::pair<int, int>> lastMove; //переменная для хранения последнего хода
 
 private:
     std::vector<std::vector<std::unique_ptr<figure>>> board; //доска
     int moveCount;
+
 };
