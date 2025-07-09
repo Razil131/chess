@@ -10,9 +10,7 @@ public:
     enum teams { BLACK, WHITE }; //цвет
     enum figureTypes { BISHOP, KING, KNIGHT, PAWN, QUEEN, ROOK }; //тип
 
-
-
-protected: //
+protected: 
     teams team;
     std::pair<int, int> pos;
     figureTypes figureType;

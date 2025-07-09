@@ -26,19 +26,10 @@ std::vector<std::pair<int, int>> king::get_available_moves(const Board& board) {
         int nx = pos.first + dx; //первый ход по иксу
         int ny = pos.second + dy; //первый ход по игрику
         if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
-            if (board.isOccupied(nx, ny)) { // Проверяем занята ли клетка
-                if (board.isOccupiedByOwnTeam(nx, ny, team)) continue; //если своя фигура, то дальше не лезем
-                if (board.isOccupiedByEnemyTeam(nx, ny, team)) { //если вражеская, то ее можем забрать и дальше не лезем
+            if (board.isOccupiedByOwnTeam(nx, ny, team)) continue; //если своя фигура, то нельзя туда идти
                     moves.emplace_back(nx, ny);
-                    continue;
                 }
-            } else {
-                moves.emplace_back(nx, ny); //если нету ничего то тоже добавляем
-        }
     }
-}
 
     return moves;
 }
-
-//TODO сделать, чтобы нельзя было ходить под шах
