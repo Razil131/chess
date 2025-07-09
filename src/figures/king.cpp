@@ -1,26 +1,14 @@
 #include "king.hpp"
 #include "board.hpp"
 
-king::king(teams t, std::pair<int,int> p) { //конструктор
-        team = t; 
-        pos = p;
-        figureType = KING;
-
-        if (team == WHITE)
-            iconPath = "/materials/kw.png";
-        else
-            iconPath = "/materials/kb.png";
-}
 
 king::king(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
         team = t;
         pos = p;
         figureType = KING;
 
-        if (team == WHITE)
-            iconPath = "/materials/kw.png";
-        else
-            iconPath = "/materials/kb.png";
+        iconPath = (team == WHITE) ? "/materials/kw.png" : "/materials/kb.png";
+
         sprite.setTexture(texture);
         sprite.setScale(1.2f, 1.2f);
 }

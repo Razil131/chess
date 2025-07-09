@@ -1,34 +1,9 @@
 #include "game.hpp"
 
-namespace { // это штука чтобы только из этого файла можно было функцию применить
-    void addFigure( // добавить фигуру на gui
-        std::unique_ptr<figure> fig, // указатель на фигуру
-        std::vector<std::unique_ptr<figure>>& figures, // вектор всех фигур чтобы туда новую добавить
-        float offsetX, // отступ по x для букв
-        float offsetY, // отстпу по y для цифр
-        float cellSize, // размер ячейки поля
-        int cellX, // по x на какой ячейке должна быть фигура
-        int cellY) // по y на какой ячейке должна быть фигура
-    {
-        fig->getSprite()->setScale(1.2f, 1.2f); // чуть увеличиваем размер иконки 
-        fig->getSprite()->setPosition(
-            offsetX + 10 + cellX * cellSize, // ставим на позицию +10 +15 это чтобы примерно по центру ячейки картинка была
-            offsetY + 15 + cellY * cellSize
-        ); 
-        figures.push_back(std::move(fig)); // добавляем в вектор фигур
-    }
-}
 
-void setupFigures(
-    std::map<std::string, sf::Texture>& textures, // мапа название фигуры - ее текстура
-    std::vector<std::unique_ptr<figure>>& figures, // вектор указателей на фигуры
-    float offsetX, // отступ по x для букв
-    float offsetY, // отстпу по y для цифр
-    float cellSize) // размер ячейки поля
-{
-    const std::string types[] = { "p", "r", "n", "b", "q", "k" }; // это чтобы генерить название png в materials (36 строка генерит)
+void loadTextures(std::map<std::string, sf::Texture>& textures){
+    const std::string types[] = {"b", "p", "r", "n", "q", "k" }; // это чтобы генерить название png в materials
     const std::string colors[] = { "w", "b" };
-
     // загружаем текстуры
     for (const std::string& color : colors) {
         for (const std::string& type : types) {
@@ -40,72 +15,6 @@ void setupFigures(
             }
         }
     }
-
-    // белые пешки
-    for (int i = 0; i < 8; i++) {
-        auto pawn_w = std::make_unique<pawn>(
-            figure::WHITE, std::make_pair(i,1), textures["pw"]);
-        addFigure(std::move(pawn_w), figures, offsetX, offsetY, cellSize, i, 6);
-    }
-
-    // белые основные фигуры
-    addFigure(std::make_unique<rook>(
-                  figure::WHITE, std::make_pair(0,0), textures["rw"]),
-              figures, offsetX, offsetY, cellSize, 0, 7);
-    addFigure(std::make_unique<knight>(
-                  figure::WHITE, std::make_pair(1,0), textures["nw"]),
-              figures, offsetX, offsetY, cellSize, 1, 7);
-    addFigure(std::make_unique<bishop>(
-                  figure::WHITE, std::make_pair(2,0), textures["bw"]),
-              figures, offsetX, offsetY, cellSize, 2, 7);
-    addFigure(std::make_unique<queen>(
-                  figure::WHITE, std::make_pair(3,0), textures["qw"]),
-              figures, offsetX, offsetY, cellSize, 3, 7);
-    addFigure(std::make_unique<king>(
-                  figure::WHITE, std::make_pair(4,0), textures["kw"]),
-              figures, offsetX, offsetY, cellSize, 4, 7);
-    addFigure(std::make_unique<bishop>(
-                  figure::WHITE, std::make_pair(5,0), textures["bw"]),
-              figures, offsetX, offsetY, cellSize, 5, 7);
-    addFigure(std::make_unique<knight>(
-                  figure::WHITE, std::make_pair(6,0), textures["nw"]),
-              figures, offsetX, offsetY, cellSize, 6, 7);
-    addFigure(std::make_unique<rook>(
-                  figure::WHITE, std::make_pair(7,0), textures["rw"]),
-              figures, offsetX, offsetY, cellSize, 7, 7);
-
-    // черные пешки
-    for (int i = 0; i < 8; i++) {
-        auto pawn_b = std::make_unique<pawn>(
-            figure::BLACK, std::make_pair(i,6), textures["pb"]);
-        addFigure(std::move(pawn_b), figures, offsetX, offsetY, cellSize, i, 1);
-    }
-
-    // черные основные фигуры
-    addFigure(std::make_unique<rook>(
-                  figure::BLACK, std::make_pair(0,7), textures["rb"]),
-              figures, offsetX, offsetY, cellSize, 0, 0);
-    addFigure(std::make_unique<knight>(
-                  figure::BLACK, std::make_pair(1,7), textures["nb"]),
-              figures, offsetX, offsetY, cellSize, 1, 0);
-    addFigure(std::make_unique<bishop>(
-                  figure::BLACK, std::make_pair(2,7), textures["bb"]),
-              figures, offsetX, offsetY, cellSize, 2, 0);
-    addFigure(std::make_unique<queen>(
-                  figure::BLACK, std::make_pair(3,7), textures["qb"]),
-              figures, offsetX, offsetY, cellSize, 3, 0);
-    addFigure(std::make_unique<king>(
-                  figure::BLACK, std::make_pair(4,7), textures["kb"]),
-              figures, offsetX, offsetY, cellSize, 4, 0);
-    addFigure(std::make_unique<bishop>(
-                  figure::BLACK, std::make_pair(5,7), textures["bb"]),
-              figures, offsetX, offsetY, cellSize, 5, 0);
-    addFigure(std::make_unique<knight>(
-                  figure::BLACK, std::make_pair(6,7), textures["nb"]),
-              figures, offsetX, offsetY, cellSize, 6, 0);
-    addFigure(std::make_unique<rook>(
-                  figure::BLACK, std::make_pair(7,7), textures["rb"]),
-              figures, offsetX, offsetY, cellSize, 7, 0);
 }
 
 
@@ -168,10 +77,18 @@ void drawBoardAndLabels(sf::RenderWindow& window, sf::RectangleShape boardRectan
         window.draw(numbers[j]);
 }
 
-void drawFigures(sf::RenderWindow& window, const std::vector<std::unique_ptr<figure>>& figures) {
+void drawFigures(sf::RenderWindow& window, Board* board,  float CELLSIZE, float OFFSETX, float OFFSETY) {
     // рисуем фигуры
-    for (auto& figura : figures) {
-        window.draw(*(figura->getSprite()));
+    for (const auto& row : *(board->getBoard())) {
+        for (const auto& fig : row) {
+            if (fig) {
+                fig->getSprite()->setPosition(
+                    OFFSETX + 10 + (fig->getPos().first) * CELLSIZE, // ставим на позицию +10 +15 это чтобы примерно по центру ячейки картинка была
+                    OFFSETY + 15 + (7-fig->getPos().second) * CELLSIZE
+                ); 
+                window.draw(*(fig->getSprite()));
+            }
+        }
     }
 }
 
@@ -235,12 +152,14 @@ void drawMoveHighlights( // рисуем все возможные ходы
 void processEvents(
     sf::RenderWindow& window,
     Board* board,
-    std::vector<std::unique_ptr<figure>>& figures,
     bool& isFigureSelected,
     figure*& selectedFigure,
     std::vector<std::pair<int, int>>& possibleMoves,
     sf::RectangleShape& lastMoveFrom,
     sf::RectangleShape& lastMoveTo,
+    std::map<std::string, sf::Texture>& textures,
+    std::vector<sf::Sprite>& to_choose,
+    std::vector<sf::RectangleShape>& rectangles_to_choose,
     bool& hasMoved,
     float OFFSETX,
     float OFFSETY,
@@ -253,14 +172,18 @@ void processEvents(
         if (event.type == sf::Event::MouseButtonPressed && // нажатие левой кнопки мыши
             event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y); // получаем положение курсора
-
+            // если пешка на клетке для превращения
+            if (board->convertFlag){
+                selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE); // выбираем и превращаем
+                return;
+            }
             if (!isFigureSelected) { // если фигура еще не выбрана
-                selectFigure(mousePos, board, figures, // пытаемся выбрать фигуру по всем фигурам проходимся и смотрим (убрано в отдельную функцию)
+                selectFigure(mousePos, board, // пытаемся выбрать фигуру по всем фигурам проходимся и смотрим (убрано в отдельную функцию)
                              isFigureSelected, selectedFigure,
                              possibleMoves);
             } else { // если уже была выбрана фигура ранее
                 bool moved = applyMoveIfValid(  // двигаем фигуру на клетку на которую щелкнули передвигаем квадраты показывающие последний ход
-                    mousePos, board, figures,
+                    mousePos, board,
                     selectedFigure, possibleMoves,
                     lastMoveFrom, lastMoveTo,
                     hasMoved, OFFSETX,
@@ -273,7 +196,7 @@ void processEvents(
                     possibleMoves.clear(); // возможных ходов нет
                 } else { // если движение не произошло тоесть клик был не по клетке а по фигуре или вообще вне поля
                     updateSelectionOnMissClick( // проверяем все фигуры вдруг по ним кликнули
-                        mousePos, board, figures,
+                        mousePos, board,
                         selectedFigure, possibleMoves
                     );
                 }
@@ -293,20 +216,24 @@ void handleWindowClose(sf::RenderWindow& window, const sf::Event& event) {
 void selectFigure(
     const sf::Vector2f& mousePos,
     Board* board,
-    std::vector<std::unique_ptr<figure>>& figures,
     bool& isFigureSelected,
     figure*& selectedFigure,
     std::vector<std::pair<int, int>>& possibleMoves
 ) {
-    for (auto& fig : figures) { // перебираем все фигуры
-        if (fig->getSprite()->getGlobalBounds().contains(mousePos) && // если фигура под курсором и сейчас ход команды этой фигуры
-            fig->getTeam() == board->getCurrentTeam()) {
-            isFigureSelected = true; // фигура выбрана
-            selectedFigure = fig.get(); 
-            std::pair<int, int> boardPos = selectedFigure->getPos();
-            possibleMoves = board->getValidMoves(boardPos.first, boardPos.second);  // возможные ходы этой фигуры
-            break;
+
+    for (const auto& row : *(board->getBoard())) {// перебираем все фигуры
+        for (const auto& fig : row) {
+            if (fig) {
+                if (fig->getSprite()->getGlobalBounds().contains(mousePos) && // если фигура под курсором и сейчас ход команды этой фигуры
+                    fig->getTeam() == board->getCurrentTeam()) {
+                    isFigureSelected = true; // фигура выбрана
+                    std::pair<int, int> boardPos = selectedFigure->getPos();
+                    possibleMoves = board->getValidMoves(boardPos.first, boardPos.second);;  // возможные ходы этой фигуры
+                    break;
+                }
+            }
         }
+        if (isFigureSelected) break;  // выход из внешнего цикла, если фигура найдена
     }
 }
 
@@ -314,7 +241,6 @@ void selectFigure(
 bool applyMoveIfValid(
     const sf::Vector2f& mousePos,
     Board* board,
-    std::vector<std::unique_ptr<figure>>& figures,
     figure*& selectedFigure,
     const std::vector<std::pair<int, int>>& possibleMoves,
     sf::RectangleShape& lastMoveFrom,
@@ -332,29 +258,11 @@ bool applyMoveIfValid(
         );
         if (!cellRect.contains(mousePos)) continue;  
 
-        figure* target = board->getFigure(move.first, move.second); // получаем фигуру на месте куда надо сходить
-        bool success = false; // выполнится ли хол
-        if (target && target->getTeam() != selectedFigure->getTeam()) { //  если куда ходим стоит фигура противоположной команды
-            if (board->makeMove(selectedFigure->getPos(), move)) { // ходим
-                figures.erase( // убираем фигуру стоявшую на том месте куда сходили
-                    std::remove_if( 
-                        figures.begin(), figures.end(), // перебираем все фигуры в векторе figures
-                        [&](const std::unique_ptr<figure>& f) { // анонимная функция возвращает true если позиция фигуры совпадает с позицией куда ходим
-                            return f->getPos() == move; 
-                        }
-                    ),
-                    figures.end() 
-                );
-                success = true; // ход успешно выполнен
-            }
-        } else {
-            success = board->makeMove(selectedFigure->getPos(), move); // если куда ходим противника не было просто ходим
-        }
-
-        if (success) { // если ход выполнен перемещаем последний ход ( зеленые квадраты)
+        std::pair<int,int> prev_pos = selectedFigure->getPos();
+        if (board->makeMove(selectedFigure->getPos(), move)) { // ходим
             lastMoveFrom.setPosition(
-                OFFSETX + selectedFigure->getPos().first * CELLSIZE,
-                OFFSETY + (7 - selectedFigure->getPos().second) * CELLSIZE
+            OFFSETX + prev_pos.first * CELLSIZE,
+            OFFSETY + (7 - prev_pos.second) * CELLSIZE
             );
             lastMoveTo.setPosition(
                 OFFSETX + move.first * CELLSIZE,
@@ -365,7 +273,6 @@ bool applyMoveIfValid(
                 OFFSETX + 10 + move.first * CELLSIZE,
                 OFFSETY + 15 + (7 - move.second) * CELLSIZE
             );
-
             hasMoved = true;
             return true; // сходили
         }
@@ -377,7 +284,6 @@ bool applyMoveIfValid(
 void updateSelectionOnMissClick(
     const sf::Vector2f& mousePos,
     Board* board,
-    std::vector<std::unique_ptr<figure>>& figures,
     figure*& selectedFigure,
     std::vector<std::pair<int, int>>& possibleMoves
 ) {
@@ -388,6 +294,105 @@ void updateSelectionOnMissClick(
             std::pair<int, int> boardPos = selectedFigure->getPos();
             possibleMoves = board->getValidMoves(boardPos.first, boardPos.second);  // возможные ходы этой фигуры
             break;
+
+    bool found = false;
+    for (const auto& row : *(board->getBoard())) {// перебираем все фигуры
+        for (const auto& fig : row) {
+            if (fig) {
+                if (fig->getSprite()->getGlobalBounds().contains(mousePos) && // если фигура под курсором и сейчас ход команды этой фигуры
+                    fig->getTeam() == board->getCurrentTeam()) {
+                    selectedFigure = fig.get();
+                    found = true; 
+                    std::pair<int, int> boardPos = selectedFigure->getPos();
+                    possibleMoves = board->getValidMoves(boardPos.first, boardPos.second);;  // возможные ходы этой фигуры
+                    break;
+                }
+            }
+
+        }
+        if (found) break;  // выход из внешнего цикла
+    }
+}
+
+// создать меню выбора
+void createChoiceMenu(
+    const Board* board,
+    std::vector<sf::Sprite>& to_choose,
+    std::vector<sf::RectangleShape>& rectangles_to_choose,
+    std::map<std::string, sf::Texture>& textures,
+    float OFFSETX,
+    float OFFSETY,
+    float CELLSIZE
+) {
+    to_choose.clear(); // отчищаем прошлое меню
+    rectangles_to_choose.clear();
+
+    // получаем позицию для превращения
+    std::pair<int, int> pos = board->convertPosition;
+    figure* pawn = board->getFigure(pos);
+
+    // определяем цвет
+    std::string colorPrefix = (pawn->getTeam() == figure::WHITE) ? "w" : "b";
+
+    // названия фигур для превращения
+    std::vector<std::string> types = { "q", "b", "n", "r" };
+
+    for (int i = 0; i < types.size(); ++i) {
+        sf::Sprite sprite; // создаем спрайт фигуры
+        sprite.setTexture(textures[types[i] + colorPrefix]);
+        sprite.setScale(1.2f, 1.2f);
+
+        float x = OFFSETX + (2 + i) * CELLSIZE + 10;
+        float y = OFFSETY + 3.5f * CELLSIZE;
+
+        sprite.setPosition(x, y);
+        to_choose.push_back(sprite);
+
+        // создаём фон за фигурой
+        sf::RectangleShape rect(sf::Vector2f(CELLSIZE, CELLSIZE));
+        rect.setPosition(x - 10, y - 15); // чуть левее и выше чтобы обрамить спрайт
+        rect.setFillColor(sf::Color(200, 200, 200, 180)); // светло-серый с прозрачностью
+        rect.setOutlineColor(sf::Color::Black);
+        rect.setOutlineThickness(2.f);
+        rectangles_to_choose.push_back(rect);
+    }
+}
+
+// отрисовать меню выбора
+void drawChoiceMenu(sf::RenderWindow& window,std::vector<sf::Sprite>& to_choose, std::vector<sf::RectangleShape> rectanges_to_choose){
+    for (sf::RectangleShape rect: rectanges_to_choose){ // рисуем задний фон
+        window.draw(rect);
+    }
+    for (sf::Sprite sprite:to_choose){ // рисуем спрайты фигур
+        window.draw(sprite);
+    }
+}
+
+// выбрать и предвратить фигуру
+void selectFigureToConvert(Board* board,
+    const std::vector<sf::RectangleShape> rectangles_to_choose,
+    const sf::Vector2f& mousePos,
+    std::map<std::string, sf::Texture>& textures,
+    float OFFSETX,
+    float CELLSIZE){
+    figure::teams col = board->getFigure(board->convertPosition)->getTeam(); // цвет фигуры
+    for (sf::RectangleShape rect: rectangles_to_choose){ // перебираем квадраты
+        if (rect.getGlobalBounds().contains(mousePos)){ // если мышка в этом квадрате
+            int rect_col = ((rect.getPosition().x-OFFSETX-10)/CELLSIZE)-1;
+            switch (rect_col){
+                case (0): // первый квадрат то делаем королевой так как ее спрайт в первом квадрате
+                    board->convertPawn(board->convertPosition.first, board->convertPosition.second, figure::QUEEN, col==figure::WHITE ? textures["qw"] : textures["qb"]);
+                    break;
+                case(1): // второй квадрат и так далее
+                    board->convertPawn(board->convertPosition.first, board->convertPosition.second, figure::BISHOP, col==figure::WHITE ? textures["bw"] : textures["bb"]);
+                    break;
+                case(2):
+                    board->convertPawn(board->convertPosition.first, board->convertPosition.second, figure::KNIGHT, col==figure::WHITE ? textures["nw"] : textures["nb"]);
+                    break;
+                case(3):
+                    board->convertPawn(board->convertPosition.first, board->convertPosition.second, figure::ROOK, col==figure::WHITE ? textures["rw"] : textures["rb"]);
+                    break;
+            }
         }
     }
 }

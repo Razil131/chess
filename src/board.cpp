@@ -21,6 +21,22 @@ figure* Board::getFigure(int x, int y) const{ //функция для возвр
     return nullptr; //если ничего нет
 }
 
+// надоело мне уже это first second
+figure* Board::getFigure(std::pair<int,int> pos) const{ //функция для возвращения указателя на фигуру
+    int x = pos.first;
+    int y = pos.second;
+    if(x >= 0 && x < 8 && y >= 0 && y < 8){
+        return board[y][x].get(); //если че то есть, вернет указатель #FIXED тут было x y а не y x
+    }
+    return nullptr; //если ничего нет
+}
+
+// чтобы gui реально отображало что происходит на бэкенд
+std::vector<std::vector<std::unique_ptr<figure>>>* Board::getBoard(){
+    return &board;
+}
+
+// получить чей сейчас ход
 figure::teams Board::getCurrentTeam() const{
     return (moveCount % 2 == 0) ? figure::WHITE : figure::BLACK;
 }
@@ -49,7 +65,7 @@ void Board::removeFigure(int x, int y) {
         board[y][x].reset(); // Удаляет фигуру, устанавливает nullptr в ее место
 }
 
-void Board::convertPawn(int x, int y, figure::figureTypes new_type) { //тут переделываем пешку в другую какую нибудь фигуру
+void Board::convertPawn(int x, int y, figure::figureTypes new_type, sf::Texture& texture) { //тут переделываем пешку в другую какую нибудь фигуру
     figure* pawn = getFigure(x, y);
     if (pawn && pawn->getFigureType() == figure::PAWN) {
         if ((pawn->getTeam() == figure::WHITE && y == 7) || (pawn->getTeam() == figure::BLACK && y == 0)) { //проверяем, находится ли пешка на последней клетке
@@ -57,19 +73,19 @@ void Board::convertPawn(int x, int y, figure::figureTypes new_type) { //тут �
 
             switch (new_type) {
                 case figure::QUEEN:
-                    new_figure = std::make_unique<queen>(pawn->getTeam(), std::make_pair(x, y));
+                    new_figure = std::make_unique<queen>(pawn->getTeam(), std::make_pair(x, y), texture);
                     break;
                 case figure::ROOK:
-                    new_figure = std::make_unique<rook>(pawn->getTeam(), std::make_pair(x, y));
+                    new_figure = std::make_unique<rook>(pawn->getTeam(), std::make_pair(x, y), texture);
                     break;
                 case figure::BISHOP:
-                    new_figure = std::make_unique<bishop>(pawn->getTeam(), std::make_pair(x, y));
+                    new_figure = std::make_unique<bishop>(pawn->getTeam(), std::make_pair(x, y), texture);
                     break;
                 case figure::KNIGHT:
-                    new_figure = std::make_unique<knight>(pawn->getTeam(), std::make_pair(x, y));
+                    new_figure = std::make_unique<knight>(pawn->getTeam(), std::make_pair(x, y), texture);
                     break;
                 default:
-                    new_figure = std::make_unique<queen>(pawn->getTeam(), std::make_pair(x, y));
+                    new_figure = std::make_unique<queen>(pawn->getTeam(), std::make_pair(x, y), texture);
                     break;
             }
 
@@ -110,7 +126,7 @@ bool Board::isKingInCheck(figure::teams team) const {
     return false; //если ничего не прошли никаких проверок, значит король не под шахом
 }
 
-void Board::initialize(){ //функция для начального положения фигур, по стандартной схеме
+void Board::initialize(std::map<std::string, sf::Texture>& textures){ //функция для начального положения фигур, по стандартной схеме
     for(int y = 0; y < 8; ++y){
         for(int x = 0; x < 8; ++x){ //очищаем доску 
             removeFigure(x, y);
@@ -118,34 +134,34 @@ void Board::initialize(){ //функция для начального поло�
     }
 
     for(int x = 0; x < 8; ++x){
-        setFigure(x, 1, std::make_unique<pawn>(figure::teams::WHITE, std::make_pair(x, 1))); //ставим белые пешки
-        setFigure(x, 6, std::make_unique<pawn>(figure::teams::BLACK, std::make_pair(x, 6))); //ставим черные пешки
+        setFigure(x, 1, std::make_unique<pawn>(figure::teams::WHITE, std::make_pair(x, 1), textures["pw"])); //ставим белые пешки
+        setFigure(x, 6, std::make_unique<pawn>(figure::teams::BLACK, std::make_pair(x, 6), textures["pb"])); //ставим черные пешки
     }
     //ставим ладьи на их места
-    setFigure(0, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(0, 0)));
-    setFigure(7, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(7, 0)));
-    setFigure(0, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(0, 7)));
-    setFigure(7, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(7, 7)));
+    setFigure(0, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(0, 0), textures["rw"]));
+    setFigure(7, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(7, 0), textures["rw"]));
+    setFigure(0, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(0, 7), textures["rb"]));
+    setFigure(7, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(7, 7), textures["rb"]));
 
     //ставим коней
-    setFigure(1, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(1, 0)));
-    setFigure(6, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(6, 0)));
-    setFigure(1, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(1, 7)));
-    setFigure(6, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(6, 7)));
+    setFigure(1, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(1, 0), textures["nw"]));
+    setFigure(6, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(6, 0), textures["nw"]));
+    setFigure(1, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(1, 7), textures["nb"]));
+    setFigure(6, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(6, 7), textures["nb"]));
 
     //ставим слонов
-    setFigure(2, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(2, 0)));
-    setFigure(5, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(5, 0)));
-    setFigure(2, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(2, 7)));
-    setFigure(5, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(5, 7)));
+    setFigure(2, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(2, 0), textures["bw"]));
+    setFigure(5, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(5, 0), textures["bw"]));
+    setFigure(2, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(2, 7), textures["bb"]));
+    setFigure(5, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(5, 7), textures["bb"]));
 
     //ставим ферзей
-    setFigure(3, 0, std::make_unique<queen>(figure::teams::WHITE, std::make_pair(3, 0)));
-    setFigure(3, 7, std::make_unique<queen>(figure::teams::BLACK, std::make_pair(3, 7)));
+    setFigure(3, 0, std::make_unique<queen>(figure::teams::WHITE, std::make_pair(3, 0), textures["qw"]));
+    setFigure(3, 7, std::make_unique<queen>(figure::teams::BLACK, std::make_pair(3, 7), textures["qb"]));
 
     //ставим королей
-    setFigure(4, 0, std::make_unique<king>(figure::teams::WHITE, std::make_pair(4, 0)));
-    setFigure(4, 7, std::make_unique<king>(figure::teams::BLACK, std::make_pair(4, 7)));
+    setFigure(4, 0, std::make_unique<king>(figure::teams::WHITE, std::make_pair(4, 0), textures["kw"]));
+    setFigure(4, 7, std::make_unique<king>(figure::teams::BLACK, std::make_pair(4, 7), textures["kb"]));
 }
 
 
@@ -160,6 +176,7 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
     auto valid_moves = movingfig->get_available_moves(*this); //Получаем доступные ходы фигуры
     
     if(std::find(valid_moves.begin(), valid_moves.end(), to) == valid_moves.end()) return false; //проверяем доступные ходы. Если искомый ход(to) есть в списке, то вернется указатель на него. Если его нету, вернется valid_moves.end()
+
 
     auto saveFrom = std::move(board[from.second][from.first]); // Сохраняем текущее состояние если ход приведёт к шаху
     auto saveTo = std::move(board[to.second][to.first]);
@@ -177,6 +194,7 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
 
     enPassantFlag = false;
     enPassantPosition = {-1, -1}; //сбрасываем
+
 
     if (movingfig->getFigureType() == figure::PAWN && abs(from.second - to.second) == 2) {
         enPassantFlag = true;
@@ -198,6 +216,7 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
             convertPosition = to;
         }
     }
+
 
     ++moveCount;
 
@@ -250,6 +269,7 @@ std::vector<std::pair<int, int>> Board::getValidMoves(int x, int y) { //испо
 Пат
 
 Ну по идее по логике и правилам игры все, дальше сохранение, разные режимы и тд
+
 
 Возможно стоит этот файл раскидать по разным для читаемости кода, но хз это потом уже
 */

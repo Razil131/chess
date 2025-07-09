@@ -1,26 +1,13 @@
 #include "queen.hpp"
 #include "board.hpp"
 
-queen::queen(teams t, std::pair<int,int> p) { //конструктор
-        team = t; 
-        pos = p;
-        figureType = QUEEN;
-
-        if (team == WHITE)
-            iconPath = "/materials/qw.png";
-        else
-            iconPath = "/materials/qb.png";
-}
-
 queen::queen(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
         team = t;
         pos = p;
         figureType = QUEEN;
 
-        if (team == WHITE)
-            iconPath = "/materials/qw.png";
-        else
-            iconPath = "/materials/qb.png";
+        iconPath = (team == WHITE) ? "/materials/qw.png" : "/materials/qb.png";
+
         sprite.setTexture(texture);
         sprite.setScale(1.2f, 1.2f);
 }
