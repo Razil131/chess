@@ -6,6 +6,7 @@
 #include "queen.hpp"
 #include "king.hpp"
 #include <algorithm>
+#include <iostream>
 
 Board::Board() : moveCount(0), enPassantFlag(false), enPassantPosition(-1,-1) {
     board.resize(8);
@@ -123,6 +124,7 @@ bool Board::isKingInCheck(figure::teams team) const {
             }
         }
     }
+
     return false; //если ничего не прошли никаких проверок, значит король не под шахом
 }
 
@@ -169,6 +171,8 @@ void Board::initialize(std::map<std::string, sf::Texture>& textures){ //функ
 bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
     figure* movingfig = getFigure(from.first, from.second); //получаем нач положение фигуры
     if(!movingfig) return false;
+
+    mateFlag = false;
 
     bool prevEnPassantFlag = enPassantFlag;
     std::pair<int, int> prevEnPassantPosition = enPassantPosition; //по идее это должно пофиксить то что фигура не пропадала
@@ -217,6 +221,9 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
         }
     }
 
+    figure::teams team = (movingfig->getTeam() == figure::WHITE ? figure::BLACK : figure::WHITE);
+
+    mateFlag = isKingInMate(team);
 
     ++moveCount;
 
@@ -260,7 +267,24 @@ std::vector<std::pair<int, int>> Board::getValidMoves(int x, int y) { //испо
             validMoves.push_back(move);
         }
     }
+
     return validMoves;
+}
+
+bool Board::isKingInMate(figure::teams team) { //проверяем был ли мат, в функции мы смотрим есть ли ходы у фигуры команды, которой шах поставили
+    if(!isKingInCheck(team)) return false;
+    for(int y = 0; y < 8; ++y){
+        for(int x = 0; x < 8; ++x){
+            figure* fig = getFigure(x, y);
+            if(!fig || fig->getTeam() != team) continue; //скипаем пустые клетки и чужие фигуры
+            std::vector<std::pair<int, int>> currentFigMoves = getValidMoves(x, y);
+            if(!currentFigMoves.empty()){
+                return false;
+            }
+        }
+    }
+    std::cout << "mate";
+    return true;
 }
 
 /*TODO
