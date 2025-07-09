@@ -227,6 +227,7 @@ void selectFigure(
                 if (fig->getSprite()->getGlobalBounds().contains(mousePos) && // если фигура под курсором и сейчас ход команды этой фигуры
                     fig->getTeam() == board->getCurrentTeam()) {
                     isFigureSelected = true; // фигура выбрана
+                    selectedFigure = fig.get();
                     std::pair<int, int> boardPos = selectedFigure->getPos();
                     possibleMoves = board->getValidMoves(boardPos.first, boardPos.second);;  // возможные ходы этой фигуры
                     break;
@@ -287,13 +288,6 @@ void updateSelectionOnMissClick(
     figure*& selectedFigure,
     std::vector<std::pair<int, int>>& possibleMoves
 ) {
-    for (auto& fig : figures) { // проверяем вдруг клик по другой фигуре
-        if (fig->getSprite()->getGlobalBounds().contains(mousePos) && // если мышка на фигуре и эта фигура цвета который щас ходит
-            fig->getTeam() == board->getCurrentTeam()) {
-            selectedFigure = fig.get(); // получаем эту фигуру
-            std::pair<int, int> boardPos = selectedFigure->getPos();
-            possibleMoves = board->getValidMoves(boardPos.first, boardPos.second);  // возможные ходы этой фигуры
-            break;
 
     bool found = false;
     for (const auto& row : *(board->getBoard())) {// перебираем все фигуры
