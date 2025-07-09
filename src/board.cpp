@@ -83,8 +83,8 @@ void Board::convertPawn(int x, int y, figure::figureTypes new_type) { //тут �
 bool Board::isKingInCheck(figure::teams team) const {
 
     std::pair<int, int> kingPos(-1, -1); //поиск короля
-    for(int y = 0; y < 0; ++y){ //шуршим по всем клеткам и проверяем, где король стоит
-        for(int x = 0; x < 0; ++x){
+    for(int y = 0; y < 8; ++y){ //шуршим по всем клеткам и проверяем, где король стоит
+        for(int x = 0; x < 8; ++x){
             figure* fig = getFigure(x, y);
             if(fig && fig->getTeam() == team && fig->getFigureType() == figure::KING){
                 kingPos = {x, y};
@@ -154,17 +154,24 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
     figure* movingfig = getFigure(from.first, from.second); //получаем нач положение фигуры
     if(!movingfig) return false;
 
-    figure::teams currentTeam = movingfig->getTeam(); //сохраняем текущую команду в переменную для фейк хода
+    bool prevEnPassantFlag = enPassantFlag;
+    std::pair<int, int> prevEnPassantPosition = enPassantPosition; //по идее это должно пофиксить то что фигура не пропадала
     
     auto valid_moves = movingfig->get_available_moves(*this); //Получаем доступные ходы фигуры
     
     if(std::find(valid_moves.begin(), valid_moves.end(), to) == valid_moves.end()) return false; //проверяем доступные ходы. Если искомый ход(to) есть в списке, то вернется указатель на него. Если его нету, вернется valid_moves.end()
-    
 
-    enPassantFlag = false; //перед проверкой взятия на проходе устанавливаем флаг в фолс
+    enPassantFlag = false;
+    enPassantPosition = {-1, -1}; //сбрасываем
+
+    if (movingfig->getFigureType() == figure::PAWN && abs(from.second - to.second) == 2) {
+        enPassantFlag = true;
+        int midy = (from.second + to.second) / 2;
+        enPassantPosition = std::make_pair(to.first, midy);
+    }
 
     if (movingfig->getFigureType() == figure::PAWN) { //проверка на взятие на проходе
-        if (enPassantFlag && to == enPassantPosition) {
+        if (prevEnPassantFlag && to == prevEnPassantPosition) {
             int direction = (movingfig->getTeam() == figure::WHITE) ? 1 : -1;
             int capturey = to.second - direction;
             removeFigure(to.first, capturey);
@@ -177,33 +184,15 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
             convertPosition = to;
         }
     }
-    /*
-    auto saveFrom = std::move(board[from.second][from.first]); //сохраняем клетку
-    auto saveTo = std::move(board[to.second][to.first]);
 
-    board[to.second][to.first] = std::move(saveFrom); //делаем фейк ход
-    board[from.second][from.first] = nullptr;
-    movingfig->setPos(to);
-
-    bool checkAfterMove = isKingInCheck(currentTeam); //проверяем, будет ли кинг под шахом
-
-    board[from.second][from.first] = std::move(board[to.first][to.second]); //возврат исходной позиции
-    board[to.second][to.first] = std::move(saveTo);
-    movingfig->setPos(from);
-
-    if(checkAfterMove) return false; //ход невозможен если король под шахом
-    */
-
-    setFigure(to.first, to.second, std::move(board[from.second][from.first])); //перемещаем фигуру, по сути передаем право владения фигурой из первой клетки ко второй
-    removeFigure(from.first, from.second);//удаляем фигуру из начального положения
-    movingfig->setPos(to);//обновляем позицию у самой фигуры
-
-    if (movingfig->getFigureType() == figure::PAWN && abs(from.second - to.second) == 2) {
-        enPassantFlag = true;
-        int midy = (from.second + to.second) / 2;
-        enPassantPosition = std::make_pair(to.first, midy);
+     if (getFigure(to.first, to.second) != nullptr) {
+        removeFigure(to.first, to.second);
     }
 
+     auto figPtr = std::move(board[from.second][from.first]);
+    board[from.second][from.first] = nullptr;
+    board[to.second][to.first] = std::move(figPtr);
+    board[to.second][to.first]->setPos(to);
 
     ++moveCount;
 
