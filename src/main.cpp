@@ -26,14 +26,17 @@ int main() {
     sf::Text numbers[8];
     createNumbers(numbers, font, CELLSIZE, OFFSETY);
 
-    // мапа текстур и вектор фигур
-    std::map<std::string, sf::Texture> textures;
-    std::vector<std::unique_ptr<figure>> figures;
-    setupFigures(textures, figures, OFFSETX, OFFSETY, CELLSIZE); // расставляет фигуры в gui
+    std::map<std::string, sf::Texture> textures; // мапа текстур
+    loadTextures(textures);
+    Board* board = new Board();  // создание твоей доски (❁´◡`❁)
+    board->initialize(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
 
     bool isFigureSelected = false; // фигура сейчас выбрана для хода
     figure* selectedFigure = nullptr; 
     std::vector<std::pair<int, int>> possibleMoves; // возможные ходы для выбранной фигуры
+
+    std::vector<sf::Sprite> to_choose; // спрайты фигур в меню выбора
+    std::vector<sf::RectangleShape> rectangles_to_choose; // прямоугольники на заднем плане в меню выбора
 
     sf::RectangleShape lastMoveFrom(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик откуда последний ход
     sf::RectangleShape lastMoveTo(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик куда последний ход
@@ -41,11 +44,8 @@ int main() {
     lastMoveTo.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
     bool hasMoved = false; // флаг был ли уже ход а то при запуске когда хода не было сделано эти квадраты просто на угол уезжали и закрывали часть окна
 
-    Board* board = new Board();  // создание твоей доски (❁´◡`❁)
-    board->initialize(); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
-
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
-        processEvents(window, board, figures, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
+        processEvents(window, board, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
 
         window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
 
@@ -54,12 +54,16 @@ int main() {
             window.draw(lastMoveFrom);
             window.draw(lastMoveTo);
         }
-        drawFigures(window, figures); // рисуем фигуры
+        drawFigures(window, board, CELLSIZE, OFFSETX, OFFSETY); // рисуем фигуры
 
         if (isFigureSelected) { // если фигура выбрана
             drawMoveHighlights(window, possibleMoves, *board, selectedFigure, OFFSETX, OFFSETY, CELLSIZE); // рисуем возможные ходы
         }
 
+        if (board->convertFlag){ // если пешка на клетке для превращения
+            createChoiceMenu(board, to_choose, rectangles_to_choose, textures, OFFSETX, OFFSETY, CELLSIZE); // создаем и отрисовываем меню выбора
+            drawChoiceMenu(window,to_choose, rectangles_to_choose);
+        }
 
         window.display(); // показывалось окно чтобы
     }

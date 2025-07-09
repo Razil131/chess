@@ -1,27 +1,13 @@
 #include "knight.hpp"
 #include "board.hpp"
 
-knight::knight(teams t, std::pair<int,int> p) { //конструктор
-        team = t; 
-        pos = p;
-        figureType = KNIGHT;
-
-        if (team == WHITE)
-            iconPath = "/materials/nw.png";
-        else
-            iconPath = "/materials/nb.png";
-}
-
-
 knight::knight(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
         team = t;
         pos = p;
         figureType = KNIGHT;
 
-        if (team == WHITE)
-            iconPath = "/materials/nw.png";
-        else
-            iconPath = "/materials/nb.png";
+        iconPath = (team == WHITE) ? "/materials/nw.png" : "/materials/nb.png";
+
         sprite.setTexture(texture);
         sprite.setScale(1.2f, 1.2f);
 }

@@ -1,27 +1,14 @@
-#include <cmath>
 #include "bishop.hpp"
 #include "board.hpp"
-
-bishop::bishop(teams t, std::pair<int,int> p) { //конструктор
-        team = t; 
-        pos = p;
-        figureType = BISHOP;
-
-        if (team == WHITE)
-            iconPath = "/materials/bw.png";
-        else
-            iconPath = "/materials/bb.png";
-}
+#include <iostream>
 
 bishop::bishop(teams t, std::pair<int,int> p, sf::Texture& texture) { // доп конструктор только для gui с текстурой
         team = t; 
         pos = p;
         figureType = BISHOP;
 
-        if (team == WHITE)
-            iconPath = "/materials/bw.png";
-        else
-            iconPath = "/materials/bb.png";
+        iconPath = (team == WHITE) ? "/materials/bw.png" : "/materials/bb.png";
+        
         sprite.setTexture(texture);
         sprite.setScale(1.2f, 1.2f);
 }

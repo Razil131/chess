@@ -1,26 +1,13 @@
 #include "pawn.hpp"
 #include "board.hpp"
 
-pawn::pawn(teams t, std::pair<int,int> p) { //конструктор
-        team = t; 
-        pos = p;
-        figureType = PAWN;
-
-        if (team == WHITE)
-            iconPath = "/materials/pw.png";
-        else
-            iconPath = "/materials/pb.png";
-}
-
 pawn::pawn(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
         team = t;
         pos = p;
         figureType = PAWN;
 
-        if (team == WHITE)
-            iconPath = "/materials/pw.png";
-        else
-            iconPath = "/materials/pb.png";
+        iconPath = (team == WHITE) ? "/materials/pw.png" : "/materials/pb.png";
+
         sprite.setTexture(texture);
         sprite.setScale(1.2f, 1.2f);
 }

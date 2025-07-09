@@ -15,13 +15,8 @@
 
 class figure;
 
-
-void setupFigures( // расставить все фигуры по стандарту на gui
-    std::map<std::string, sf::Texture>& textures, // текстуры
-    std::vector<std::unique_ptr<figure>>& figures, // вектор с указателями на фигуры
-    float offsetX, // отступ для букв
-    float offsetY, // отступ для цифр
-    float cellSize); // размер клетки
+// загрузить текстуры
+void loadTextures(std::map<std::string, sf::Texture>& textures);
 
 
 void initializeBoardRectangles( // расставить все клетки доски
@@ -55,20 +50,19 @@ void drawBoardAndLabels( // нарисовать цифры и буквы
     const sf::Text numbers[8]
 );
 
-void drawFigures( // нарисовать фигуры
-    sf::RenderWindow& window,
-    const std::vector<std::unique_ptr<figure>>& figures
-);
+void drawFigures(sf::RenderWindow& window, Board* board,  float CELLSIZE, float OFFSETX, float OFFSETY);  // нарисовать фигуры
 
 void processEvents(
     sf::RenderWindow& window,
     Board* board,
-    std::vector<std::unique_ptr<figure>>& figures,
     bool& isFigureSelected,
     figure*& selectedFigure,
     std::vector<std::pair<int, int>>& possibleMoves,
     sf::RectangleShape& lastMoveFrom,
     sf::RectangleShape& lastMoveTo,
+    std::map<std::string, sf::Texture>& textures,
+    std::vector<sf::Sprite>& to_choose,
+    std::vector<sf::RectangleShape>& rectangles_to_choose,
     bool& hasMoved,
     float OFFSETX,
     float OFFSETY,
@@ -84,6 +78,7 @@ void drawMoveHighlights( // нарисовать все возможные хо�
     float OFFSETY,
     float CELLSIZE
 );
+
 // закрывает окно по крестику
 void handleWindowClose(sf::RenderWindow& window, const sf::Event& event);
 
@@ -91,7 +86,6 @@ void handleWindowClose(sf::RenderWindow& window, const sf::Event& event);
 void selectFigure(
     const sf::Vector2f& mousePos,
     Board* board,
-    std::vector<std::unique_ptr<figure>>& figures,
     bool& isFigureSelected,
     figure*& selectedFigure,
     std::vector<std::pair<int, int>>& possibleMoves
@@ -101,7 +95,6 @@ void selectFigure(
 bool applyMoveIfValid(
     const sf::Vector2f& mousePos,
     Board* board,
-    std::vector<std::unique_ptr<figure>>& figures,
     figure*& selectedFigure,
     const std::vector<std::pair<int, int>>& possibleMoves,
     sf::RectangleShape& lastMoveFrom,
@@ -116,8 +109,26 @@ bool applyMoveIfValid(
 void updateSelectionOnMissClick(
     const sf::Vector2f& mousePos,
     Board* board,
-    std::vector<std::unique_ptr<figure>>& figures,
     figure*& selectedFigure,
     std::vector<std::pair<int, int>>& possibleMoves
 );
 
+// создать меню выбора 
+void createChoiceMenu(const Board* board,
+    std::vector<sf::Sprite>& to_choose,
+    std::vector<sf::RectangleShape>& rectanges_to_choose,
+    std::map<std::string,sf::Texture>& textures,
+    float OFFSETX,
+    float OFFSETY,
+    float CELLSIZE);
+
+// отрисовать меню выбора
+void drawChoiceMenu(sf::RenderWindow& window,std::vector<sf::Sprite>& to_choose, std::vector<sf::RectangleShape> rectangles_to_choose);
+
+// кликнуть по фигуре в меню выбора
+void selectFigureToConvert(Board* board,
+    const std::vector<sf::RectangleShape> rectangles_to_choose,
+    const sf::Vector2f& mousePos,
+    std::map<std::string, sf::Texture>& textures,
+    float OFFSETX,
+    float CELLSIZE);
