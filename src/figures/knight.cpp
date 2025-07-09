@@ -1,34 +1,36 @@
-#include "../../include/knight.hpp"
+#include "knight.hpp"
+#include "board.hpp"
 
-knight::knight(teams t, std::pair<int,int> p) {
+knight::knight(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
         team = t;
         pos = p;
         figureType = KNIGHT;
 
-        if (team == WHITE)
-            iconPath = "/materials/kw.png";
-        else
-            iconPath = "/materials/kb.png";
+        iconPath = (team == WHITE) ? "/materials/nw.png" : "/materials/nb.png";
+
+        sprite.setTexture(texture);
+        sprite.setScale(1.2f, 1.2f);
 }
 
-std::vector<std::pair<int, int>> knight::get_available_moves(const Board& board) { //TODO сделать чтобы противники учитывались там передавать доску и проверять
+std::vector<std::pair<int, int>> knight::get_available_moves(const Board& board) {
     std::vector<std::pair<int, int>> moves;
 
-    const int offsets[8][2] = { //все возможные ходы коня
+    const std::vector<std::pair<int, int>> directions = { //все возможные ходы коня
         {+2, +1}, {+2, -1},
         {-2, +1}, {-2, -1},
         {+1, +2}, {+1, -2},
         {-1, +2}, {-1, -2}
     };
 
-    for (const auto& o : offsets) {
-        int nx = pos.first + o[0];
-        int ny = pos.second + o[1];
+    for (auto [dx, dy] : directions) {
+        int nx = pos.first + dx;
+        int ny = pos.second + dy;
 
         if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
-            moves.push_back({nx, ny});
+            if (board.isOccupiedByOwnTeam(nx, ny, team)) 
+                continue; //если своя фигура, то дальше не лезем
+            moves.emplace_back(nx, ny); //если нету ничего то тоже добавляем
+            }
         }
-    }
-
     return moves;
 }

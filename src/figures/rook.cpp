@@ -1,37 +1,41 @@
-#include "../../include/rook.hpp"
+#include "rook.hpp"
+#include "board.hpp"
 
-rook::rook(teams t, std::pair<int,int> p) {
+rook::rook(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп конструктор только для gui с текстурой
         team = t;
         pos = p;
         figureType = ROOK;
 
-        if (team == WHITE)
-            iconPath = "/materials/rw.png";
-        else
-            iconPath = "/materials/rb.png";
+        iconPath = (team == WHITE) ? "/materials/rw.png" : "/materials/rb.png";
+
+        sprite.setTexture(texture);
+        sprite.setScale(1.2f, 1.2f);
 }
 
-std::vector<std::pair<int, int>> rook::get_available_moves(const Board& board) { //TODO сделать чтобы противники учитывались там передавать доску и проверять
+std::vector<std::pair<int, int>> rook::get_available_moves(const Board& board) { 
     std::vector<std::pair<int, int>> moves;
 
-    const int directions[4][2] = {
+    const std::vector<std::pair<int, int>> directions = { //направления движения ладьи
         {+1, 0}, {-1, 0}, {0, +1}, {0, -1}
     };
 
-    for (const auto& d : directions) {
-        int nx = pos.first;
-        int ny = pos.second;
+    for (auto [dx, dy] : directions) {
+        int nx = pos.first + dx; //первый ход по иксу
+        int ny = pos.second + dy; //первый ход по игрику
 
-        while (true) {
-            nx += d[0];
-            ny += d[1];
-
-            if (nx < 0 || nx > 7 || ny < 0 || ny > 7)
-                break;
-
-            moves.push_back({nx, ny});
+        while (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
+            if (board.isOccupied(nx, ny)) { // Проверяем занята ли клетка
+                if (board.isOccupiedByOwnTeam(nx, ny, team)) break; //если своя фигура, то дальше не лезем
+                if (board.isOccupiedByEnemyTeam(nx, ny, team)) { //если вражеская, то ее можем забрать и дальше не лезем
+                    moves.emplace_back(nx, ny);
+                    break;
+                }
+            } else {
+                moves.emplace_back(nx, ny); //если нету ничего то тоже добавляем
+            }
+            nx += dx;
+            ny += dy;
         }
     }
-
     return moves;
 }

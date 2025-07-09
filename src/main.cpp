@@ -1,93 +1,73 @@
 #include <SFML/Graphics.hpp>
-#include "../include/game.hpp"
-
-
+#include "game.hpp"
+#include "board.hpp"
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(900, 900), "chess"); // окно 900 на 900
-   
+    sf::RenderWindow window(sf::VideoMode(900, 900), "Chess"); // создаем окошечно так сказать 900 на 900 пикселей с название Chess
 
+    const float CELLSIZE = 100.f; // размер клетки
+    const float OFFSETX = 50.f; // отстпуп для букв слева
+    const float OFFSETY = 50.f; // отступ для цифр снизу
 
-    const float CELLSIZE = 100.f; // размер ячейки
-    const float OFFSETX = 50.f; // смещаем доску вправо чтобы буквы и цифры поместились
-    const float OFFSETY = 50.f; // смещаем доску вниз
+    // создаем доску
+    sf::RectangleShape boardRectangles[8][8];
+    initializeBoardRectangles(boardRectangles, CELLSIZE, OFFSETX, OFFSETY);
 
-    sf::RectangleShape boardRectangles[8][8]; // массив для хранения квадратов из которых состоит поле
-
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-            boardRectangles[i][j] = sf::RectangleShape(sf::Vector2f(CELLSIZE, CELLSIZE));// создаем квадрат
-            boardRectangles[i][j].setPosition(OFFSETX + i * CELLSIZE, OFFSETY + j * CELLSIZE); // ставим квадрат на правильную позицию
-
-            // цвет шахматной клетки
-            if ((i + j) % 2 == 0)
-                boardRectangles[i][j].setFillColor(sf::Color::White);
-            else
-                boardRectangles[i][j].setFillColor(sf::Color(25,25,25)); // не черный чтобы видно было черные фигуры
-        }
+    sf::Font font; // шрифт
+    if (!loadFont(font)) {
+        return -1; // если не загрузился то :(
     }
 
-    // загружаем шрифт
-    sf::Font font;
-    if (!font.loadFromFile("../arial.ttf")) {
-        return -1; // если шрифт не загрузился
-    }
-
-    // буквы под доской
+    //буквы
     sf::Text letters[8];
-    for (int i = 0; i < 8; i++) {
-        letters[i].setFont(font); // шрифт
-        letters[i].setString(std::string(1, 'a' + i)); // текст: буква
-        letters[i].setCharacterSize(24); // размер
-        letters[i].setFillColor(sf::Color::White); // цвет
-        letters[i].setPosition(OFFSETX + i * CELLSIZE + CELLSIZE / 2 - 8, OFFSETY + 8 * CELLSIZE + 5); // позиция
-    }
+    createLetters(letters, font, CELLSIZE, OFFSETX, OFFSETY);
 
-    // цифры слева от доски
+    //цифоы
     sf::Text numbers[8];
-    for (int j = 0; j < 8; j++) {
-        numbers[j].setFont(font); // шрифт
-        numbers[j].setString(std::to_string(8 - j)); // текст: цифра
-        numbers[j].setCharacterSize(24); // размер
-        numbers[j].setFillColor(sf::Color::White); // цвет
-        numbers[j].setPosition(30, OFFSETY + j * CELLSIZE + CELLSIZE / 2 - 12); // позиция
+    createNumbers(numbers, font, CELLSIZE, OFFSETY);
+
+    std::map<std::string, sf::Texture> textures; // мапа текстур
+    loadTextures(textures);
+    Board* board = new Board();  // создание твоей доски (❁´◡`❁)
+    board->initialize(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+
+    bool isFigureSelected = false; // фигура сейчас выбрана для хода
+    figure* selectedFigure = nullptr; 
+    std::vector<std::pair<int, int>> possibleMoves; // возможные ходы для выбранной фигуры
+
+    std::vector<sf::Sprite> to_choose; // спрайты фигур в меню выбора
+    std::vector<sf::RectangleShape> rectangles_to_choose; // прямоугольники на заднем плане в меню выбора
+
+    sf::RectangleShape lastMoveFrom(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик откуда последний ход
+    sf::RectangleShape lastMoveTo(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик куда последний ход
+    lastMoveFrom.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
+    lastMoveTo.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
+    bool hasMoved = false; // флаг был ли уже ход а то при запуске когда хода не было сделано эти квадраты просто на угол уезжали и закрывали часть окна
+
+    while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
+        processEvents(window, board, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
+
+        window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
+
+        drawBoardAndLabels(window, boardRectangles, letters, numbers); // рисуем доску и цифры буквы
+        if (hasMoved) { // если ход был рисуем зеленые квадраты на последнем ходу
+            window.draw(lastMoveFrom);
+            window.draw(lastMoveTo);
+        }
+        drawFigures(window, board, CELLSIZE, OFFSETX, OFFSETY); // рисуем фигуры
+
+        if (isFigureSelected) { // если фигура выбрана
+            drawMoveHighlights(window, possibleMoves, *board, selectedFigure, OFFSETX, OFFSETY, CELLSIZE); // рисуем возможные ходы
+        }
+
+        if (board->convertFlag){ // если пешка на клетке для превращения
+            createChoiceMenu(board, to_choose, rectangles_to_choose, textures, OFFSETX, OFFSETY, CELLSIZE); // создаем и отрисовываем меню выбора
+            drawChoiceMenu(window,to_choose, rectangles_to_choose);
+        }
+
+        window.display(); // показывалось окно чтобы
     }
-    
-    // Загружаем фигуры
-    std::map<std::string, sf::Texture> textures;
-    std::vector<ChessFigure> figures;
-    setupFigures(textures, figures, OFFSETX, OFFSETY, CELLSIZE);
 
-    while (window.isOpen()) { // основной цикл
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) // закрытие окна
-                window.close();
-        }
-
-        window.clear(sf::Color(128,128,128));  // обновление окна и ставится синий фон
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                window.draw(boardRectangles[i][j]); // отрисовываем снова все квадраты
-            }
-        }
-
-        // отрисовываем буквы
-        for (int i = 0; i < 8; i++) {
-            window.draw(letters[i]);
-        }
-
-        // отрисовываем цифры
-        for (int j = 0; j < 8; j++) {
-            window.draw(numbers[j]);
-        }
-        // отрисовывает фигуры
-        for (auto& figure : figures) {
-            window.draw(figure.sprite);
-        }
-
-        window.display();
-    }
-
+    delete board; // отчищаем память от твоей доски 😥😥😣😣😥
     return 0;
 }
