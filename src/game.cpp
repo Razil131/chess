@@ -303,7 +303,8 @@ void selectFigure(
             fig->getTeam() == board->getCurrentTeam()) {
             isFigureSelected = true; // фигура выбрана
             selectedFigure = fig.get(); 
-            possibleMoves = selectedFigure->get_available_moves(*board);  // возможные ходы этой фигуры
+            std::pair<int, int> boardPos = selectedFigure->getPos();
+            possibleMoves = board->getValidMoves(boardPos.first, boardPos.second);  // возможные ходы этой фигуры
             break;
         }
     }
@@ -384,7 +385,8 @@ void updateSelectionOnMissClick(
         if (fig->getSprite()->getGlobalBounds().contains(mousePos) && // если мышка на фигуре и эта фигура цвета который щас ходит
             fig->getTeam() == board->getCurrentTeam()) {
             selectedFigure = fig.get(); // получаем эту фигуру
-            possibleMoves = selectedFigure->get_available_moves(*board);
+            std::pair<int, int> boardPos = selectedFigure->getPos();
+            possibleMoves = board->getValidMoves(boardPos.first, boardPos.second);  // возможные ходы этой фигуры
             break;
         }
     }

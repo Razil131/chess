@@ -23,13 +23,16 @@ public:
     bool makeMove(std::pair<int, int> from, std::pair<int, int> to); //Ход
     void initialize(); //функция для дефолтной расстановки фигур
     void convertPawn(int x, int y, figure::figureTypes new_type); //функция превращения пешки в фигуру
-    bool isKingInCheck(figure::teams team) const;
+    bool isKingInCheck(figure::teams team) const; //проверка на шах
+    std::vector<std::pair<int, int>> getValidMoves(int x, int y); //для корректной проверки на то, откроем ли мы короля под шах
+    bool wouldKingInCheck(std::pair<int, int> from, std::pair<int, int> to); //для красивой жизни 
 
     bool convertFlag = false; //флаг для convertPawn
     std::pair<int, int> convertPosition; //позиция пешки, которую надо превратить
     bool enPassantFlag = false; //флаг для взятия на проходе
     std::pair<int, int> enPassantPosition; //позиция пешки для взятия на проходе
     std::pair<std::pair<int, int>, std::pair<int, int>> lastMove; //переменная для хранения последнего хода
+
 
 private:
     std::vector<std::vector<std::unique_ptr<figure>>> board; //доска

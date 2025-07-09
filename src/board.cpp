@@ -97,8 +97,8 @@ bool Board::isKingInCheck(figure::teams team) const {
 
     figure::teams enemyTeam = (team == figure::WHITE) ? figure::BLACK : figure::WHITE;
 
-    for(int y = 0; y < 0; ++y){ //тут мы сканим находится ли король под атакой
-        for(int x = 0; x < 0; ++x){
+    for(int y = 0; y < 8; ++y){ //тут мы сканим находится ли король под атакой
+        for(int x = 0; x < 8; ++x){
             figure* fig = getFigure(x, y);
             if(!fig || fig->getTeam() != enemyTeam) continue; //скипаем пустые клетки и свои фигуры
             std::vector<std::pair<int, int>> moves = fig->get_available_moves(*this);//получаем все ходы фигуры врага
@@ -161,6 +161,20 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
     
     if(std::find(valid_moves.begin(), valid_moves.end(), to) == valid_moves.end()) return false; //проверяем доступные ходы. Если искомый ход(to) есть в списке, то вернется указатель на него. Если его нету, вернется valid_moves.end()
 
+    auto saveFrom = std::move(board[from.second][from.first]); // Сохраняем текущее состояние если ход приведёт к шаху
+    auto saveTo = std::move(board[to.second][to.first]);
+
+    board[to.second][to.first] = std::move(saveFrom); // Выполняем фейк ход для проверки шаха
+    board[from.second][from.first] = nullptr;
+    movingfig->setPos(to);
+
+    if (isKingInCheck(movingfig->getTeam())) {
+        board[from.second][from.first] = std::move(board[to.second][to.first]);
+        board[to.second][to.first] = std::move(saveTo);
+        movingfig->setPos(from);
+        return false;
+    }
+
     enPassantFlag = false;
     enPassantPosition = {-1, -1}; //сбрасываем
 
@@ -185,16 +199,57 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
         }
     }
 
-     if (getFigure(to.first, to.second) != nullptr) {
-        removeFigure(to.first, to.second);
-    }
-
-     auto figPtr = std::move(board[from.second][from.first]);
-    board[from.second][from.first] = nullptr;
-    board[to.second][to.first] = std::move(figPtr);
-    board[to.second][to.first]->setPos(to);
-
     ++moveCount;
 
     return true; //ход сделан
 }
+
+bool Board::wouldKingInCheck(std::pair<int, int> from, std::pair<int, int> to){ //метод для того, чтобы проверять будт ли король под шахом, делая фейк ход и проверяя, король под шахом или нет
+    figure* movingFig = getFigure(from.first, from.second);
+    if (!movingFig) return false;
+
+    auto tempFrom = std::move(board[from.second][from.first]); //сохраняем временно состояние для фейк хода
+    auto tempTo = std::move(board[to.second][to.first]);
+    figure::teams team = movingFig->getTeam();
+    bool prevEnPassantFlag = enPassantFlag;
+    std::pair<int, int> prevEnPassantPosition = enPassantPosition;
+
+    board[to.second][to.first] = std::move(tempFrom); //перемещаем
+    board[from.second][from.first] = nullptr;
+    movingFig->setPos(to);
+
+    bool inCheck = isKingInCheck(team); //проверяем, будет ли король под шахом после этого хода
+
+    board[from.second][from.first] = std::move(board[to.second][to.first]); //возвращаем
+    board[to.second][to.first] = std::move(tempTo);
+    movingFig->setPos(from);
+    enPassantFlag = prevEnPassantFlag;
+    enPassantPosition = prevEnPassantPosition;
+
+    return inCheck;
+}
+
+std::vector<std::pair<int, int>> Board::getValidMoves(int x, int y) { //используется теперь вместо get_availible_moves, вызывает его в себе. Показывает только РЕАЛЬНО доступные ходы, а не все возможные по правилам, как было раньше
+    figure* fig = getFigure(x, y);
+    if (!fig) return {};
+    
+    std::vector<std::pair<int, int>> validMoves;
+    auto moves = fig->get_available_moves(*this);
+    
+    for (const auto& move : moves) { //получаем все ходы и проверяем, какие из них не ведут к тому, что король будет под шахом. Если такие есть, их не добавляем
+        if (!wouldKingInCheck({x, y}, move)) {
+            validMoves.push_back(move);
+        }
+    }
+    return validMoves;
+}
+
+/*TODO
+Мат с окончанием игры
+Рокировка
+Пат
+
+Ну по идее по логике и правилам игры все, дальше сохранение, разные режимы и тд
+
+Возможно стоит этот файл раскидать по разным для читаемости кода, но хз это потом уже
+*/
