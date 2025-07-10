@@ -5,6 +5,7 @@ rook::rook(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп ко�
         team = t;
         pos = p;
         figureType = ROOK;
+        hasMoved = false;
 
         iconPath = (team == WHITE) ? "/materials/rw.png" : "/materials/rb.png";
 

@@ -38,3 +38,10 @@ void figure::setSprite(const sf::Sprite new_sprite){
     sprite = new_sprite;
 }
 
+bool figure::getMoved() const{
+    return hasMoved;
+}
+
+void figure::setMoved(bool m){
+     hasMoved = m;
+}

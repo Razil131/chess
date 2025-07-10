@@ -29,6 +29,8 @@ public:
     std::vector<std::pair<int, int>> getValidMoves(int x, int y); //для корректной проверки на то, откроем ли мы короля под шах
     bool wouldKingInCheck(std::pair<int, int> from, std::pair<int, int> to); //для красивой жизни
     bool isKingInMate(figure::teams team); //проверка на мат
+    bool isKingInStalemate(figure::teams team); //проверка на пат
+    bool isSquareAttack(std::pair<int, int> square, figure::teams team) const; //проверка квадрата на атаку для рокировки
 
 
 
@@ -38,6 +40,7 @@ public:
     std::pair<int, int> enPassantPosition; //позиция пешки для взятия на проходе
     std::pair<std::pair<int, int>, std::pair<int, int>> lastMove; //переменная для хранения последнего хода
     bool mateFlag = false;//флаг для мата
+    bool staleMateFlag = false; //флаг для пата
 
 
 private:
