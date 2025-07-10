@@ -35,6 +35,9 @@ int main() {
     figure* selectedFigure = nullptr; 
     std::vector<std::pair<int, int>> possibleMoves; // возможные ходы для выбранной фигуры
 
+    bool endGameScreen=false; // должен ли быть экран завершения игры?
+    sf::RectangleShape newGameButtonRect; // прямоугольник для начала новой игры
+
     std::vector<sf::Sprite> to_choose; // спрайты фигур в меню выбора
     std::vector<sf::RectangleShape> rectangles_to_choose; // прямоугольники на заднем плане в меню выбора
 
@@ -45,7 +48,7 @@ int main() {
     bool hasMoved = false; // флаг был ли уже ход а то при запуске когда хода не было сделано эти квадраты просто на угол уезжали и закрывали часть окна
 
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
-        processEvents(window, board, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
+        processEvents(window, board, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
 
         window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
 
@@ -54,7 +57,24 @@ int main() {
             window.draw(lastMoveFrom);
             window.draw(lastMoveTo);
         }
+        if (board->isKingInCheck(figure::BLACK)){ // если какому нибудь королю стоит шах нарисовать красный квадрат на нем
+            drawCheck(window,board,figure::BLACK,OFFSETX,OFFSETY,CELLSIZE);
+        }else if(board->isKingInCheck(figure::WHITE)){
+            drawCheck(window,board,figure::WHITE,OFFSETX,OFFSETY,CELLSIZE);
+        }
+
         drawFigures(window, board, CELLSIZE, OFFSETX, OFFSETY); // рисуем фигуры
+
+        if (board->isKingInMate(figure::WHITE)){ // если у кого то мат или пат рисуем экран конца игры
+            drawEndGameScreen(window,figure::WHITE,font, newGameButtonRect);
+            endGameScreen=true;
+        }else if(board->isKingInMate(figure::BLACK)){
+            drawEndGameScreen(window,figure::BLACK,font, newGameButtonRect);
+            endGameScreen=true;
+        }else if (board->isKingInStalemate(figure::WHITE) or board->isKingInStalemate(figure::BLACK)){
+            drawEndGameScreen(window,figure::NONE,font, newGameButtonRect);
+            endGameScreen=true;
+        }
 
         if (isFigureSelected) { // если фигура выбрана
             drawMoveHighlights(window, possibleMoves, *board, selectedFigure, OFFSETX, OFFSETY, CELLSIZE); // рисуем возможные ходы

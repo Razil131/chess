@@ -129,6 +129,7 @@ bool Board::isKingInCheck(figure::teams team) const {
 }
 
 void Board::initialize(std::map<std::string, sf::Texture>& textures){ //функция для начального положения фигур, по стандартной схеме
+    moveCount = 0; // чтобы при перезапуске игры игра не начиналась с хода черных
     for(int y = 0; y < 8; ++y){
         for(int x = 0; x < 8; ++x){ //очищаем доску 
             removeFigure(x, y);

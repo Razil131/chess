@@ -152,6 +152,8 @@ void drawMoveHighlights( // рисуем все возможные ходы
 void processEvents(
     sf::RenderWindow& window,
     Board* board,
+    bool& endGameScreen,
+    sf::RectangleShape newGameButtonRect,
     bool& isFigureSelected,
     figure*& selectedFigure,
     std::vector<std::pair<int, int>>& possibleMoves,
@@ -172,6 +174,15 @@ void processEvents(
         if (event.type == sf::Event::MouseButtonPressed && // нажатие левой кнопки мыши
             event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y); // получаем положение курсора
+            if (endGameScreen){ // если игра закончилась проверяем нажата ли кнопка начать новую игру и начинаем ее
+                if (newGameButtonRect.getGlobalBounds().contains(mousePos)){
+                    board->initialize(textures);
+                    endGameScreen = false;
+                    hasMoved = false;
+                }
+                return;
+            }
+            
             // если пешка на клетке для превращения
             if (board->convertFlag){
                 selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE); // выбираем и превращаем
@@ -308,6 +319,32 @@ void updateSelectionOnMissClick(
     }
 }
 
+void drawCheck(sf::RenderWindow& window, // нарисовать красный квадрат на короле с шахом
+    Board* board,
+    figure::teams team,
+    float OFFSETX,
+    float OFFSETY,
+    float CELLSIZE){
+    sf::RectangleShape rect(sf::Vector2f(CELLSIZE,CELLSIZE));
+    bool found = false;
+    for (const auto& row : *(board->getBoard())) {// перебираем все фигуры
+        for (const auto& fig : row) {
+            if (fig) {
+                if (fig->getFigureType() == figure::KING and  fig->getTeam() == team){ // если король нужного цвета
+                    rect.setPosition(fig->getPos().first*CELLSIZE+OFFSETX, (7-fig->getPos().second)*CELLSIZE+OFFSETY); // ставим квадрат
+                    rect.setFillColor(sf::Color(100, 0, 0, 180));
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (found)
+            break;
+    }
+    window.draw(rect); // рисуем квадрат
+
+}
+
 // создать меню выбора
 void createChoiceMenu(
     const Board* board,
@@ -389,4 +426,48 @@ void selectFigureToConvert(Board* board,
             }
         }
     }
+}
+
+void drawEndGameScreen(sf::RenderWindow& window, // отрисовать экран конца игры
+    figure::teams winner,
+    const sf::Font& font,
+    sf::RectangleShape& btnRect)
+{
+    sf::Text winText; // текст
+    winText.setFont(font);
+    winText.setString(winner == figure::WHITE ? (winner == figure::BLACK ? "BLACK WIN" : "DRAW") : "WHITE WIN");
+    winText.setCharacterSize(64);
+    winText.setFillColor(sf::Color::White);
+
+    const sf::Vector2f btnSize(300.f, 80.f); // кнопка
+    btnRect.setSize(btnSize);
+    btnRect.setFillColor(sf::Color(180, 180, 180));   // серый фон
+    btnRect.setOutlineColor(sf::Color::Black);
+    btnRect.setOutlineThickness(3.f);
+
+    sf::Text btnText; // текст на кнопке
+    btnText.setFont(font);
+    btnText.setString("Restart game");
+    btnText.setCharacterSize(32);
+    btnText.setFillColor(sf::Color::Black);
+
+    const sf::Vector2u winSize = window.getSize();
+
+   
+    sf::FloatRect tBounds = winText.getLocalBounds();  // центрируем текст
+    winText.setOrigin(tBounds.width / 2.f, tBounds.height / 2.f);
+    winText.setPosition(winSize.x / 2.f, winSize.y / 2.f - 120.f);
+
+    
+    btnRect.setOrigin(btnSize.x / 2.f, btnSize.y / 2.f); // центрируем кнопку
+    btnRect.setPosition(winSize.x / 2.f, winSize.y / 2.f + 20.f);
+
+    
+    sf::FloatRect bBounds = btnText.getLocalBounds();// центрируем текст на кнопке
+    btnText.setOrigin(bBounds.width / 2.f, bBounds.height / 2.f);
+    btnText.setPosition(btnRect.getPosition());
+    window.draw(winText); // отрисовываем всё
+    window.draw(btnRect);
+    window.draw(btnText);
+
 }

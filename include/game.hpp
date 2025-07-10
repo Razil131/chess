@@ -52,9 +52,12 @@ void drawBoardAndLabels( // нарисовать цифры и буквы
 
 void drawFigures(sf::RenderWindow& window, Board* board,  float CELLSIZE, float OFFSETX, float OFFSETY);  // нарисовать фигуры
 
-void processEvents(
+
+void processEvents( // обработать все события на окне клик мыши закрытие окна
     sf::RenderWindow& window,
     Board* board,
+    bool& endGameScreen,
+    sf::RectangleShape newGameButtonRect,
     bool& isFigureSelected,
     figure*& selectedFigure,
     std::vector<std::pair<int, int>>& possibleMoves,
@@ -113,6 +116,13 @@ void updateSelectionOnMissClick(
     std::vector<std::pair<int, int>>& possibleMoves
 );
 
+void drawCheck(sf::RenderWindow& window, // отрисовать красный квадрат на короле с шахом
+    Board* board,
+    figure::teams team,
+    float OFFSETX,
+    float OFFSETY,
+    float CELLSIZE);
+
 // создать меню выбора 
 void createChoiceMenu(const Board* board,
     std::vector<sf::Sprite>& to_choose,
@@ -132,3 +142,8 @@ void selectFigureToConvert(Board* board,
     std::map<std::string, sf::Texture>& textures,
     float OFFSETX,
     float CELLSIZE);
+
+void drawEndGameScreen(sf::RenderWindow& window, //отрисовать меню завершения игры
+    figure::teams winner,
+    const sf::Font& font,
+    sf::RectangleShape& btnRect);
