@@ -1,5 +1,27 @@
 #include "game.hpp"
+#include <functional>
 
+
+sf::RectangleShape makeButton(float w, float h, sf::Color fill, sf::Color outline) { // функция создания кнопки
+    sf::RectangleShape btn({w, h}); // создаем кнопки с заданой шириной и высотой
+    btn.setFillColor(fill); // цвет
+    btn.setOutlineColor(outline); // цвет рамки
+    btn.setOutlineThickness(2.f); // ширина рамки
+    btn.setOrigin(w/2, h/2); // ставим начало коорд у кнопки в ее середину чтобы удобно поставить ее в центр экрана например
+    return btn;
+}
+
+
+void drawLabel(sf::RenderWindow& win,const sf::Font& font,
+               const sf::RectangleShape& btn, const std::string& s, unsigned size=24) // написать текст по центру кнопки
+{
+    sf::Text t(s, font, size); // текст
+    t.setFillColor(sf::Color::Black); // цвет текста
+    auto bb = t.getLocalBounds(); // квадрат в котором текст и ставим начальные коорды кнопки в его центр но чуть чуть выше
+    t.setOrigin(bb.width/2, bb.height/2 + 5); // +5 потому что текст кажется не по центру а ниже
+    t.setPosition(btn.getPosition()); // ставим коорды текста в кнопку
+    win.draw(t); // рисуем текст
+}
 
 void loadTextures(std::map<std::string, sf::Texture>& textures){
     const std::string types[] = {"b", "p", "r", "n", "q", "k" }; // это чтобы генерить название png в materials
@@ -368,7 +390,7 @@ void createChoiceMenu(
     // названия фигур для превращения
     std::vector<std::string> types = { "q", "b", "n", "r" };
 
-    for (int i = 0; i < types.size(); ++i) {
+    for (int i = 0; i < types.size(); i++) {
         sf::Sprite sprite; // создаем спрайт фигуры
         sprite.setTexture(textures[types[i] + colorPrefix]);
         sprite.setScale(1.2f, 1.2f);
@@ -428,46 +450,166 @@ void selectFigureToConvert(Board* board,
     }
 }
 
-void drawEndGameScreen(sf::RenderWindow& window, // отрисовать экран конца игры
-    figure::teams winner,
-    const sf::Font& font,
-    sf::RectangleShape& btnRect)
+
+
+void drawEndGameScreen(sf::RenderWindow& window,  // отрисовать экран конца игры
+                       figure::teams winner,
+                       const sf::Font& font,
+                       sf::RectangleShape& btnRect)
 {
-    sf::Text winText; // текст
-    winText.setFont(font);
-    winText.setString(winner == figure::WHITE ? (winner == figure::BLACK ? "BLACK WIN" : "DRAW") : "WHITE WIN");
-    winText.setCharacterSize(64);
+    sf::Text winText(winner == figure::WHITE ? "WHITE WINS" : // текст
+                     (winner == figure::BLACK ? "BLACK WINS" : "DRAW"),
+                     font, 64);
     winText.setFillColor(sf::Color::White);
+    auto winBounds = winText.getLocalBounds();
+    winText.setOrigin(winBounds.width / 2.f, winBounds.height / 2.f);
+    winText.setPosition(window.getSize().x / 2.f,
+                        window.getSize().y / 2.f - 120.f);
+    window.draw(winText);
 
-    const sf::Vector2f btnSize(300.f, 80.f); // кнопка
-    btnRect.setSize(btnSize);
-    btnRect.setFillColor(sf::Color(180, 180, 180));   // серый фон
-    btnRect.setOutlineColor(sf::Color::Black);
-    btnRect.setOutlineThickness(3.f);
-
-    sf::Text btnText; // текст на кнопке
-    btnText.setFont(font);
-    btnText.setString("Restart game");
-    btnText.setCharacterSize(32);
-    btnText.setFillColor(sf::Color::Black);
-
-    const sf::Vector2u winSize = window.getSize();
-
-   
-    sf::FloatRect tBounds = winText.getLocalBounds();  // центрируем текст
-    winText.setOrigin(tBounds.width / 2.f, tBounds.height / 2.f);
-    winText.setPosition(winSize.x / 2.f, winSize.y / 2.f - 120.f);
-
-    
-    btnRect.setOrigin(btnSize.x / 2.f, btnSize.y / 2.f); // центрируем кнопку
-    btnRect.setPosition(winSize.x / 2.f, winSize.y / 2.f + 20.f);
-
-    
-    sf::FloatRect bBounds = btnText.getLocalBounds();// центрируем текст на кнопке
-    btnText.setOrigin(bBounds.width / 2.f, bBounds.height / 2.f);
-    btnText.setPosition(btnRect.getPosition());
-    window.draw(winText); // отрисовываем всё
+    const sf::Vector2f winSize(window.getSize()); // кнопка
+    btnRect = makeButton(300.f, 80.f,
+                         sf::Color(180, 180, 180),  // фон
+                         sf::Color::Black);         // обводка
+    btnRect.setPosition(winSize.x / 2.f,
+                        winSize.y / 2.f + 20.f);
     window.draw(btnRect);
-    window.draw(btnText);
 
+    drawLabel(window, font, btnRect, "Restart Game", 32); // текст на кнопке
 }
+
+
+static void drawBackButton(sf::RenderWindow& win, sf::RectangleShape& backBtn, const sf::Font& font) { // создание кнопки back почти для каждого раздела меню
+    const float W = 100, H = 40; 
+    backBtn = makeButton(W, H, sf::Color(220, 100, 100), sf::Color::Black); // создаем кнопку
+    backBtn.setPosition(win.getSize().x - W/2 - 10, win.getSize().y - H/2 - 10); // ставим на позицию
+    win.draw(backBtn); // отрисовываем
+    drawLabel(win, font, backBtn, "Back", 18); // и отрисовываем текст на ней
+}
+
+// 1. Главное меню
+void drawMainMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShape>& btns, sf::Font& font) { // отрисовка главного меню игры
+    btns.clear();
+    const float W = 300, H = 60, M = 20; // параметры кнопок
+    auto center = sf::Vector2f(win.getSize()) * 0.5f;
+    std::vector<std::pair<std::string, std::string>> list = { // список кнопок и их id
+        {"play",    "Play"},
+        {"puzzles", "Puzzles"},
+        {"exit",    "Exit"}
+    };
+    float total = list.size()*H + (list.size()-1)*M; // сколько по высоте будут занимать кнопки
+    float startY = center.y - total/2 + H/2; // с какого y начинать рисовать кнопки
+    for (int i=0; i<list.size(); i++) { // по всему списку проходимся
+        auto [key, label] = list[i]; 
+        auto btn = makeButton(W, H, sf::Color(100,149,237), sf::Color::Black); // создаем кнопку
+        btn.setPosition(center.x, startY + i*(H+M)); // ставим позицию
+        btns[key] = btn;
+        win.draw(btn); 
+        drawLabel(win, font, btn, label); // рисуем текст на ней
+    }
+}
+
+void drawPuzzleMenu(sf::RenderWindow& win, // отрисовка меню выбора задач #TODO сделать чтобы вообще эти задачи хоть как то работали
+                    std::map<std::string, sf::RectangleShape>& numberBtns,
+                    sf::RectangleShape& backBtn,
+                    sf::RectangleShape& createBtn,
+                    sf::Font& font,
+                    int puzzleCount)
+{
+    numberBtns.clear();
+    const float BTN = 50, SP = 10; // размер кнопок и расстояние между ними
+    const int cols = 14; // количесво колонок с кнопками 14 - максимум что влезает в экран с текущими параметрами
+    sf::FloatRect area(30, 20, win.getSize().x-20, win.getSize().y-25); // создаем область для кнопок
+    float y0 = area.top;
+    for (int idx=0; idx<puzzleCount; idx++) { // размещаем кнопки
+        int r = idx/cols, c = idx%cols ; // строка и колонка для кнопки
+        auto btn = makeButton(BTN, BTN, sf::Color(200,200,200), sf::Color::Black); // создаем кнопку
+        btn.setPosition(area.left + c*(BTN+SP) + BTN/2,
+                        y0 + r*(BTN+SP) + BTN/2);
+        numberBtns[std::to_string(idx+1)] = btn; // записываем эту кнопку в массив
+        win.draw(btn);
+        drawLabel(win, font, btn, std::to_string(idx+1), 20); // рисуем надпись на кнопке
+    }
+    const float CW = 700, CH = 40; // параметры кнопки создать ширина и высота
+    createBtn = makeButton(CW, CH, sf::Color(100,220,100), sf::Color::Black); // кнопка
+    createBtn.setPosition(area.left + CW/2, win.getSize().y - CH/2 - 10);
+    win.draw(createBtn);
+    drawLabel(win, font, createBtn, "Create", 18); // текст
+    drawBackButton(win, backBtn, font); // создаем кнопку back
+}
+
+void drawGameTypeMenu(sf::RenderWindow& win, // отрисовка меню выбора режима игры класический фишер до 3-х шахов
+                      std::map<std::string, sf::RectangleShape>& btns,
+                      sf::RectangleShape& backBtn,
+                      sf::Font& font)
+{
+    btns.clear();
+    const float W=280, H=60, M=20; // ширина высота расстояние между кнопками
+    auto c = sf::Vector2f(win.getSize())*0.5f; // получаем размер окна /2 (точка центра окна)
+    std::vector<std::pair<std::string,std::string>> list = {  // список кнопок и их id
+        {"classic","Classic"},
+        {"fischer","Fischer"},
+        {"three","3-Check"}
+    };
+    float total = list.size()*H + (list.size()-1)*M; // сколько всего по y занимают кнопки
+    float y0 = c.y - total/2 + H/2; // точка начала создания кнопок по y
+    for (int i=0;i<list.size();i++) { 
+        auto [k,l] = list[i];
+        auto b = makeButton(W,H,sf::Color(255,215,0),sf::Color::Black); // создаем кнопки
+        b.setPosition(c.x, y0 + i*(H+M));
+        btns[k]=b;
+        win.draw(b);
+        drawLabel(win,font,b,l); // рисуем текст на кнопках
+    }
+    drawBackButton(win, backBtn, font); // рисуем кнопку назад (back)
+}
+
+void drawOpponentMenu(sf::RenderWindow& win, // отрисовка меню выбора противника ии или игрок
+                      std::map<std::string, sf::RectangleShape>& btns,
+                      sf::RectangleShape& backBtn,
+                      sf::Font& font)
+{
+    btns.clear();
+    const float W=220, H=50, M=15; // ширина высота расстояние между кнопками
+    auto c = sf::Vector2f(win.getSize())*0.5f;  // получаем размер окна /2 (точка центра окна)
+    std::vector<std::pair<std::string,std::string>> list = {
+        {"pvp","Vs Player"}, // список кнопок и их id
+        {"pve","Vs AI"}
+    };
+    float total = list.size()*H + (list.size()-1)*M; // сколько всего по y занимают кнопки
+    float y0 = c.y - total/2 + H/2; // точка начала создания кнопок по y
+    for (int i=0;i<list.size();i++) {
+        auto [k,l] = list[i];
+        auto b = makeButton(W,H,sf::Color(173,216,230),sf::Color::Black); // создаем кнопки
+        b.setPosition(c.x, y0 + i*(H+M));
+        btns[k]=b;
+        win.draw(b);
+        drawLabel(win,font,b,l); // рисуем текст на кнопках
+    }
+    drawBackButton(win, backBtn, font);// рисуем кнопку назад (back)
+}
+
+void drawColorMenu(sf::RenderWindow& win, // отрисовка меню выбора команды белые или черные
+                   std::map<std::string, sf::RectangleShape>& btns,
+                   sf::RectangleShape& backBtn,
+                   sf::Font& font)
+{
+    btns.clear();
+    const float W=180, H=50, M=20; // ширина высота расстояние между кнопками
+    auto c = sf::Vector2f(win.getSize())*0.5f;  // получаем размер окна /2 (точка центра окна)
+    std::vector<std::pair<std::string,std::string>> list = {
+        {"white","White"}, // список кнопок и их id
+        {"black","Black"}
+    };
+    float total = list.size()*H + (list.size()-1)*M; // сколько всего по y занимают кнопки
+    float y0 = c.y - total/2 + H/2; // точка начала создания кнопок по y
+    for (int i=0;i<list.size();i++) {
+        auto [k,l] = list[i];
+        auto b = makeButton(W,H,sf::Color(240,240,240),sf::Color::Black); // создаем кнопки
+        b.setPosition(c.x, y0 + i*(H+M));
+        btns[k]=b;
+        win.draw(b);
+        drawLabel(win,font,b,l); // рисуем текст на кнопках
+    }
+    drawBackButton(win, backBtn, font); // рисуем кнопку назад (back)
+} 

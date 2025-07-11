@@ -3,7 +3,7 @@
 #include "board.hpp"
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(900, 900), "Chess"); // создаем окошечно так сказать 900 на 900 пикселей с название Chess
+    sf::RenderWindow window(sf::VideoMode(900, 900), "Chess", sf::Style::Titlebar | sf::Style::Close); // создаем окошечно так сказать 900 на 900 пикселей с название Chess
 
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
@@ -22,7 +22,7 @@ int main() {
     sf::Text letters[8];
     createLetters(letters, font, CELLSIZE, OFFSETX, OFFSETY);
 
-    //цифоы
+    //цифры
     sf::Text numbers[8];
     createNumbers(numbers, font, CELLSIZE, OFFSETY);
 
@@ -66,10 +66,10 @@ int main() {
         drawFigures(window, board, CELLSIZE, OFFSETX, OFFSETY); // рисуем фигуры
 
         if (board->isKingInMate(figure::WHITE)){ // если у кого то мат или пат рисуем экран конца игры
-            drawEndGameScreen(window,figure::WHITE,font, newGameButtonRect);
+            drawEndGameScreen(window,figure::BLACK,font, newGameButtonRect); 
             endGameScreen=true;
         }else if(board->isKingInMate(figure::BLACK)){
-            drawEndGameScreen(window,figure::BLACK,font, newGameButtonRect);
+            drawEndGameScreen(window,figure::WHITE,font, newGameButtonRect);
             endGameScreen=true;
         }else if (board->isKingInStalemate(figure::WHITE) or board->isKingInStalemate(figure::BLACK)){
             drawEndGameScreen(window,figure::NONE,font, newGameButtonRect);
@@ -82,7 +82,7 @@ int main() {
 
         if (board->convertFlag){ // если пешка на клетке для превращения
             createChoiceMenu(board, to_choose, rectangles_to_choose, textures, OFFSETX, OFFSETY, CELLSIZE); // создаем и отрисовываем меню выбора
-            drawChoiceMenu(window,to_choose, rectangles_to_choose);
+            drawChoiceMenu(window, to_choose, rectangles_to_choose);
         }
 
         window.display(); // показывалось окно чтобы

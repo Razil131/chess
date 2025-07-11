@@ -147,3 +147,18 @@ void drawEndGameScreen(sf::RenderWindow& window, //отрисовать меню
     figure::teams winner,
     const sf::Font& font,
     sf::RectangleShape& btnRect);
+
+void drawMainMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShape>& btns, sf::Font& font); // отрисовать главное меню
+
+void drawPuzzleMenu(sf::RenderWindow& win, // отрисовать меню с задачами
+                    std::map<std::string, sf::RectangleShape>& numberBtns,
+                    sf::RectangleShape& backBtn,
+                    sf::RectangleShape& createBtn,
+                    sf::Font& font,
+                    int puzzleCount);
+
+void drawGameTypeMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShape>& btns, sf::RectangleShape& backBtn, sf::Font& font); // отрисовать выбор режима игры
+
+void drawOpponentMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShape>& btns, sf::RectangleShape& backBtn, sf::Font& font); // отрисовать меню выбора соперника ии или человек
+
+void drawColorMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShape>& btns, sf::RectangleShape& backBtn, sf::Font& font); // отрисовать выбор цвета команды
