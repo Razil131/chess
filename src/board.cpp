@@ -247,8 +247,18 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
 
     ++moveCount;
 
+    std::string uci = {char('a' + from.first), char('1' + from.second), char('a' + to.first), char('1' + to.second)}; //делаем строку формата а1а1 для хода, такие принимает движок
+    if (movingfig->getFigureType() == figure::PAWN && //проверяем для бота превращение пешки
+    ((movingfig->getTeam() == figure::WHITE && to.second == 7) ||
+     (movingfig->getTeam() == figure::BLACK && to.second == 0)))
+    {
+
+    char promo = 'q';
+    uci.push_back(promo);
+    }
+    movesUCI.push_back(uci);
     return true; //ход сделан
-}
+    }
 
 bool Board::wouldKingInCheck(std::pair<int, int> from, std::pair<int, int> to){ //метод для того, чтобы проверять будт ли король под шахом, делая фейк ход и проверяя, король под шахом или нет
     figure* movingFig = getFigure(from.first, from.second);
