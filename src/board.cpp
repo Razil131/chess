@@ -6,6 +6,7 @@
 #include "queen.hpp"
 #include "king.hpp"
 #include <algorithm>
+#include <iostream>
 
 Board::Board() : moveCount(0), enPassantFlag(false), enPassantPosition(-1,-1) {
     board.resize(8);
@@ -123,10 +124,12 @@ bool Board::isKingInCheck(figure::teams team) const {
             }
         }
     }
+
     return false; //если ничего не прошли никаких проверок, значит король не под шахом
 }
 
 void Board::initialize(std::map<std::string, sf::Texture>& textures){ //функция для начального положения фигур, по стандартной схеме
+    moveCount = 0; // чтобы при перезапуске игры игра не начиналась с хода черных
     for(int y = 0; y < 8; ++y){
         for(int x = 0; x < 8; ++x){ //очищаем доску 
             removeFigure(x, y);
@@ -170,10 +173,13 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
     figure* movingfig = getFigure(from.first, from.second); //получаем нач положение фигуры
     if(!movingfig) return false;
 
+    mateFlag = false;
+    staleMateFlag = false;
+
     bool prevEnPassantFlag = enPassantFlag;
     std::pair<int, int> prevEnPassantPosition = enPassantPosition; //по идее это должно пофиксить то что фигура не пропадала
     
-    auto valid_moves = movingfig->get_available_moves(*this); //Получаем доступные ходы фигуры
+    auto valid_moves = getValidMoves(from.first, from.second); //Получаем доступные ходы фигуры
     
     if(std::find(valid_moves.begin(), valid_moves.end(), to) == valid_moves.end()) return false; //проверяем доступные ходы. Если искомый ход(to) есть в списке, то вернется указатель на него. Если его нету, вернется valid_moves.end()
 
@@ -185,11 +191,29 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
     board[from.second][from.first] = nullptr;
     movingfig->setPos(to);
 
-    if (isKingInCheck(movingfig->getTeam())) {
+    if (isKingInCheck(movingfig->getTeam())) { 
         board[from.second][from.first] = std::move(board[to.second][to.first]);
         board[to.second][to.first] = std::move(saveTo);
         movingfig->setPos(from);
         return false;
+    }
+
+    movingfig->setMoved(true); //метим фигуру ходившей
+
+    if(movingfig->getFigureType() == figure::KING){ //рокируем
+        int dx = to.first - from.first;
+        if(abs(dx) == 2){
+            bool kingSide = (dx > 0);
+            int rookFromX = kingSide ? 7 : 0; 
+            int rookToX = kingSide ? to.first - 1 : to.first + 1;
+            int y = from.second;
+
+            if(figure* rook = getFigure(rookFromX, y)){
+                rook->setMoved(true);
+                board[y][rookToX] = std::move(board[y][rookFromX]);
+                rook->setPos({rookToX, y});
+            }
+        }
     }
 
     enPassantFlag = false;
@@ -217,6 +241,10 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
         }
     }
 
+    figure::teams opTeam = (movingfig->getTeam() == figure::WHITE ? figure::BLACK : figure::WHITE);
+
+    mateFlag = isKingInMate(opTeam);
+    staleMateFlag = isKingInStalemate(opTeam);
 
     ++moveCount;
 
@@ -256,20 +284,85 @@ std::vector<std::pair<int, int>> Board::getValidMoves(int x, int y) { //испо
     auto moves = fig->get_available_moves(*this);
     
     for (const auto& move : moves) { //получаем все ходы и проверяем, какие из них не ведут к тому, что король будет под шахом. Если такие есть, их не добавляем
+        if(fig->getFigureType() == figure::KING){ //проверяем будет ли клетка для рокировки под шахом
+            int dx = move.first - x;
+            if(abs(dx) == 2){
+                int step = (dx > 0) ? 1 : -1;
+                std::pair<int, int> inter(x + step, y);
+
+                if(wouldKingInCheck({x, y}, inter)) continue;
+                
+            }
+        }
+
         if (!wouldKingInCheck({x, y}, move)) {
             validMoves.push_back(move);
         }
     }
+
+    if(fig->getFigureType() == figure::KING && !fig->getMoved() && !isKingInCheck(fig->getTeam())){ //если это король, он не ходил и не под шахом щас
+        if(figure* rook = getFigure(7, y); rook && rook->getFigureType() == figure::ROOK && rook->getTeam() == fig->getTeam() && !rook->getMoved()){ //короткая рокировка
+            if(!isOccupied(5, y) && !isOccupied(6, y)){
+                if(!isSquareAttack({4, y}, fig->getTeam()) && !isSquareAttack({5, y}, fig->getTeam()) && !isSquareAttack({6, y}, fig->getTeam())){
+                    validMoves.emplace_back(6, y);
+                }
+            }
+        }
+        if(figure* rook = getFigure(0, y); rook && rook->getFigureType() == figure::ROOK && rook->getTeam() == fig->getTeam() && !rook->getMoved()){ //длинная рокировка
+            if(!isOccupied(1, y) && !isOccupied(2, y) && !isOccupied(3, y)){
+                if(!isSquareAttack({4, y}, fig->getTeam()) && !isSquareAttack({3, y}, fig->getTeam()) && !isSquareAttack({2, y}, fig->getTeam())){
+                    validMoves.emplace_back(2, y);
+                }
+            }
+        }
+    }
+
     return validMoves;
 }
 
-/*TODO
-Мат с окончанием игры
-Рокировка
-Пат
+bool Board::isKingInMate(figure::teams team) { //проверяем был ли мат, в функции мы смотрим есть ли ходы у фигуры команды, которой шах поставили
+    if(!isKingInCheck(team)) return false;
+    for(int y = 0; y < 8; ++y){
+        for(int x = 0; x < 8; ++x){
+            figure* fig = getFigure(x, y);
+            if(!fig || fig->getTeam() != team) continue; //скипаем пустые клетки и чужие фигуры
+            std::vector<std::pair<int, int>> currentFigMoves = getValidMoves(x, y);
+            if(!currentFigMoves.empty()){
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
-Ну по идее по логике и правилам игры все, дальше сохранение, разные режимы и тд
+bool Board::isKingInStalemate(figure::teams team) { //проверяем был ли пат, в функции мы смотрим есть ли ходы у фигуры команды которая некст ходит
+    if(isKingInCheck(team)) return false;
+    for(int y = 0; y < 8; ++y){
+        for(int x = 0; x < 8; ++x){
+            figure* fig = getFigure(x, y);
+            if(!fig || fig->getTeam() != team) continue; //скипаем пустые клетки и чужие фигуры
+            std::vector<std::pair<int, int>> currentFigMoves = getValidMoves(x, y);
+            if(!currentFigMoves.empty()){
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 
-Возможно стоит этот файл раскидать по разным для читаемости кода, но хз это потом уже
-*/
+bool Board::isSquareAttack(std::pair<int, int> square, figure::teams team) const{ //првоерка клетки на атаку
+    figure::teams opTeam = (team == figure::WHITE) ? figure::BLACK : figure::WHITE;
+
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            figure* fig = getFigure(x, y);
+            if (!fig || fig->getTeam() != opTeam) continue;
+            auto moves = fig->get_available_moves(*this);
+            if(std::find(moves.begin(), moves.end(), square) != moves.end()){
+                return true;
+            }
+        }
+    }
+    return false;
+}

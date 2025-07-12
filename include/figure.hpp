@@ -7,7 +7,7 @@ class Board;
 
 class figure { //общий класс фигур
 public:
-    enum teams { BLACK, WHITE }; //цвет
+    enum teams { BLACK, WHITE, NONE}; //цвет NONE чтобы ничью выводить удобно было
     enum figureTypes { BISHOP, KING, KNIGHT, PAWN, QUEEN, ROOK }; //тип
 
 protected: 
@@ -16,6 +16,7 @@ protected:
     figureTypes figureType;
     std::string iconPath; //путь к изображению
     sf::Sprite sprite; // это типо изображение на экране на эту штуку можно поставить любую текстуру
+    bool hasMoved = false;
 
 public:// хз как правильно эти public расположить чтобы их не два было
     virtual ~figure() = default; //деструктор
@@ -32,5 +33,7 @@ public:// хз как правильно эти public расположить ч
     virtual sf::Sprite* getSprite();
     virtual void setSprite(const sf::Sprite new_sprite);
     virtual std::string getIconPath();
+    bool getMoved() const;
+    void setMoved(bool m);
 
 };

@@ -6,6 +6,7 @@ king::king(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп ко�
         team = t;
         pos = p;
         figureType = KING;
+        hasMoved = false;
 
         iconPath = (team == WHITE) ? "/materials/kw.png" : "/materials/kb.png";
 
@@ -30,6 +31,5 @@ std::vector<std::pair<int, int>> king::get_available_moves(const Board& board) {
                     moves.emplace_back(nx, ny);
                 }
     }
-
     return moves;
 }

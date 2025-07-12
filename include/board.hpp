@@ -23,12 +23,14 @@ public:
     void setFigure(int x, int y, std::unique_ptr<figure> fig); //устанавливает фигуру в нужное место
     void removeFigure(int x, int y);//удаляет фигуру
     bool makeMove(std::pair<int, int> from, std::pair<int, int> to); //Ход
-
     void initialize(std::map<std::string, sf::Texture>&); //функция для дефолтной расстановки фигур
     void convertPawn(int x, int y, figure::figureTypes new_type, sf::Texture& texture); //функция превращения пешки в фигуру
     bool isKingInCheck(figure::teams team) const; //проверка на шах
     std::vector<std::pair<int, int>> getValidMoves(int x, int y); //для корректной проверки на то, откроем ли мы короля под шах
-    bool wouldKingInCheck(std::pair<int, int> from, std::pair<int, int> to); //для красивой жизни 
+    bool wouldKingInCheck(std::pair<int, int> from, std::pair<int, int> to); //для красивой жизни
+    bool isKingInMate(figure::teams team); //проверка на мат
+    bool isKingInStalemate(figure::teams team); //проверка на пат
+    bool isSquareAttack(std::pair<int, int> square, figure::teams team) const; //проверка квадрата на атаку для рокировки
 
 
 
@@ -37,6 +39,8 @@ public:
     bool enPassantFlag = false; //флаг для взятия на проходе
     std::pair<int, int> enPassantPosition; //позиция пешки для взятия на проходе
     std::pair<std::pair<int, int>, std::pair<int, int>> lastMove; //переменная для хранения последнего хода
+    bool mateFlag = false;//флаг для мата
+    bool staleMateFlag = false; //флаг для пата
 
 
 private:
