@@ -42,6 +42,8 @@ public:
     bool mateFlag = false;//флаг для мата
     bool staleMateFlag = false; //флаг для пата
 
+    std::vector<std::string> movesUCI; //будем тут хранить ходы в формате для движка
+
 
 private:
     std::vector<std::vector<std::unique_ptr<figure>>> board; //доска
