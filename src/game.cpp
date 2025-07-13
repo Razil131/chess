@@ -421,7 +421,7 @@ void drawChoiceMenu(sf::RenderWindow& window,std::vector<sf::Sprite>& to_choose,
     }
 }
 
-// выбрать и предвратить фигуру
+// выбрать и превратить фигуру
 void selectFigureToConvert(Board* board,
     const std::vector<sf::RectangleShape> rectangles_to_choose,
     const sf::Vector2f& mousePos,
@@ -487,7 +487,6 @@ static void drawBackButton(sf::RenderWindow& win, sf::RectangleShape& backBtn, c
     drawLabel(win, font, backBtn, "Back", 18); // и отрисовываем текст на ней
 }
 
-// 1. Главное меню
 void drawMainMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShape>& btns, sf::Font& font) { // отрисовка главного меню игры
     btns.clear();
     const float W = 300, H = 60, M = 20; // параметры кнопок
@@ -574,7 +573,7 @@ void drawOpponentMenu(sf::RenderWindow& win, // отрисовка меню вы
     auto c = sf::Vector2f(win.getSize())*0.5f;  // получаем размер окна /2 (точка центра окна)
     std::vector<std::pair<std::string,std::string>> list = {
         {"pvp","Vs Player"}, // список кнопок и их id
-        {"pve","Vs AI"}
+        {"pve","Vs Computer"}
     };
     float total = list.size()*H + (list.size()-1)*M; // сколько всего по y занимают кнопки
     float y0 = c.y - total/2 + H/2; // точка начала создания кнопок по y
