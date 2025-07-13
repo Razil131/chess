@@ -101,7 +101,8 @@ void vsComputer(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam)
     std::map<std::string, sf::Texture> textures; // мапа текстур
     loadTextures(textures);
     Board* board = new Board();  // создание твоей доски (❁´◡`❁)
-    board->initialize(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+    board->initialize(textures);
+    //board->fisherPos(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
 
     bool isFigureSelected = false; // фигура сейчас выбрана для хода
     figure* selectedFigure = nullptr; 
@@ -118,10 +119,11 @@ void vsComputer(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam)
     lastMoveFrom.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
     lastMoveTo.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
     bool hasMoved = false; // флаг был ли уже ход а то при запуске когда хода не было сделано эти квадраты просто на угол уезжали и закрывали часть окна
-
+  
     // создаем доску
     sf::RectangleShape boardRectangles[8][8];
     initializeBoardRectangles(boardRectangles, CELLSIZE, OFFSETX, OFFSETY);
+  
     Engine engine;
     const char* enginePath = "..\\stockfish\\stockfish-windows-x86-64-avx2.exe"; //траим запустить движок
     if (!engine.launch(enginePath)) {

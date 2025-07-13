@@ -7,6 +7,7 @@
 #include "king.hpp"
 #include <algorithm>
 #include <iostream>
+#include <random>
 
 Board::Board() : moveCount(0), enPassantFlag(false), enPassantPosition(-1,-1) {
     board.resize(8);
@@ -140,33 +141,133 @@ void Board::initialize(std::map<std::string, sf::Texture>& textures){ //функ
         setFigure(x, 1, std::make_unique<pawn>(figure::teams::WHITE, std::make_pair(x, 1), textures["pw"])); //ставим белые пешки
         setFigure(x, 6, std::make_unique<pawn>(figure::teams::BLACK, std::make_pair(x, 6), textures["pb"])); //ставим черные пешки
     }
-    //ставим ладьи на их места
-    setFigure(0, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(0, 0), textures["rw"]));
-    setFigure(7, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(7, 0), textures["rw"]));
-    setFigure(0, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(0, 7), textures["rb"]));
-    setFigure(7, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(7, 7), textures["rb"]));
+    // //ставим ладьи на их места
+    // setFigure(0, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(0, 0), textures["rw"]));
+    // setFigure(7, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(7, 0), textures["rw"]));
+    // setFigure(0, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(0, 7), textures["rb"]));
+    // setFigure(7, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(7, 7), textures["rb"]));
 
-    //ставим коней
-    setFigure(1, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(1, 0), textures["nw"]));
-    setFigure(6, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(6, 0), textures["nw"]));
-    setFigure(1, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(1, 7), textures["nb"]));
-    setFigure(6, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(6, 7), textures["nb"]));
+    // //ставим коней
+    // setFigure(1, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(1, 0), textures["nw"]));
+    // setFigure(6, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(6, 0), textures["nw"]));
+    // setFigure(1, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(1, 7), textures["nb"]));
+    // setFigure(6, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(6, 7), textures["nb"]));
 
-    //ставим слонов
-    setFigure(2, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(2, 0), textures["bw"]));
-    setFigure(5, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(5, 0), textures["bw"]));
-    setFigure(2, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(2, 7), textures["bb"]));
-    setFigure(5, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(5, 7), textures["bb"]));
+    // //ставим слонов
+    // setFigure(2, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(2, 0), textures["bw"]));
+    // setFigure(5, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(5, 0), textures["bw"]));
+    // setFigure(2, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(2, 7), textures["bb"]));
+    // setFigure(5, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(5, 7), textures["bb"]));
 
-    //ставим ферзей
-    setFigure(3, 0, std::make_unique<queen>(figure::teams::WHITE, std::make_pair(3, 0), textures["qw"]));
-    setFigure(3, 7, std::make_unique<queen>(figure::teams::BLACK, std::make_pair(3, 7), textures["qb"]));
+    // //ставим ферзей
+    // setFigure(3, 0, std::make_unique<queen>(figure::teams::WHITE, std::make_pair(3, 0), textures["qw"]));
+    // setFigure(3, 7, std::make_unique<queen>(figure::teams::BLACK, std::make_pair(3, 7), textures["qb"]));
 
     //ставим королей
     setFigure(4, 0, std::make_unique<king>(figure::teams::WHITE, std::make_pair(4, 0), textures["kw"]));
     setFigure(4, 7, std::make_unique<king>(figure::teams::BLACK, std::make_pair(4, 7), textures["kb"]));
 }
 
+void Board::fisherPos(std::map<std::string, sf::Texture>& textures){ //функция расстановки по фишеру
+    for(int y = 0; y < 8; ++y){
+        for(int x = 0; x < 8; ++x){ //очищаем доску 
+            removeFigure(x, y);
+        }
+    }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    
+    std::vector<int> numbers = {0, 1, 2, 3, 4, 5, 6, 7}; //вектор клеток
+    std::vector<int> evens = {0, 2, 4, 6}; //четные
+    std::vector<int> odds = {1, 3, 5, 7}; //нечетные
+
+    std::shuffle(numbers.begin(), numbers.end(), gen); //перемешиваем
+    std::shuffle(evens.begin(), evens.end(), gen); //перемешиваем
+    std::shuffle(odds.begin(), odds.end(), gen); //перемешиваем
+
+    std::vector<int> res;
+
+    res.push_back(evens[0]); //берем четное и нечетное число чтобы сначала поставить слонов
+    res.push_back(odds[0]);
+
+    auto it1 = std::find(numbers.begin(), numbers.end(), evens[0]); //находим эти клетки и убираем их в numbers
+    auto it2 = std::find(numbers.begin(), numbers.end(), odds[0]);
+    if (it1 < it2) {
+        numbers.erase(it2);
+        numbers.erase(it1);
+    } else {
+        numbers.erase(it1);
+        numbers.erase(it2);
+    }
+    auto maxit = std::max_element(numbers.begin(), numbers.end()); //находим максимальный элемент
+    auto minit = std::min_element(numbers.begin(), numbers.end());
+    int min = *minit;
+    int max = *maxit;
+
+    for(int i = 0; i < numbers.size(); i++){ //цикл для того, чтобы не поставить короля на крайнюю клетку, ибо от него справа и слева должны стоять ладьи
+        if(numbers[i] != min && numbers[i] != max){
+            res.push_back(numbers[i]);
+            numbers.erase(numbers.begin() + i);
+            break;
+        }
+        else continue;
+    }
+    
+    int kingPos = res[2];
+    std::vector<int> less, greater;
+    for (int v : numbers){
+        if(v < kingPos) less.push_back(v);
+        else if (v > kingPos) greater.push_back(v);
+    }
+
+    std::shuffle(less.begin(), less.end(), gen);
+    std::shuffle(greater.begin(), greater.end(), gen);
+
+    int rookL = less.front();
+    int rookR = greater.front();
+
+    numbers.erase(std::find(numbers.begin(), numbers.end(), rookL));
+    numbers.erase(std::find(numbers.begin(), numbers.end(), rookR));
+
+    res.push_back(rookL);
+    res.push_back(rookR);
+
+    for(int i = 0; i<numbers.size(); i++){
+        res.push_back(numbers[i]);
+    }
+
+
+    for(int x = 0; x < 8; ++x){
+        setFigure(x, 1, std::make_unique<pawn>(figure::teams::WHITE, std::make_pair(x, 1), textures["pw"])); //ставим белые пешки
+        setFigure(x, 6, std::make_unique<pawn>(figure::teams::BLACK, std::make_pair(x, 6), textures["pb"])); //ставим черные пешки
+    }
+    //ставим ладьи на их места
+    setFigure(res[3], 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(res[3], 0), textures["rw"]));
+    setFigure(res[4], 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(res[4], 0), textures["rw"]));
+    setFigure(res[3], 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(res[3], 7), textures["rb"]));
+    setFigure(res[4], 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(res[4], 7), textures["rb"]));
+
+    //ставим коней
+    setFigure(res[5], 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(res[5], 0), textures["nw"]));
+    setFigure(res[6], 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(res[6], 0), textures["nw"]));
+    setFigure(res[5], 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(res[5], 7), textures["nb"]));
+    setFigure(res[6], 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(res[6], 7), textures["nb"]));
+
+    //ставим слонов
+    setFigure(res[0], 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(res[0], 0), textures["bw"]));
+    setFigure(res[1], 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(res[1], 0), textures["bw"]));
+    setFigure(res[0], 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(res[0], 7), textures["bb"]));
+    setFigure(res[1], 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(res[1], 7), textures["bb"]));
+
+    //ставим ферзей
+    setFigure(res[7], 0, std::make_unique<queen>(figure::teams::WHITE, std::make_pair(res[7], 0), textures["qw"]));
+    setFigure(res[7], 7, std::make_unique<queen>(figure::teams::BLACK, std::make_pair(res[7], 7), textures["qb"]));
+
+    // //ставим королей
+    setFigure(res[2], 0, std::make_unique<king>(figure::teams::WHITE, std::make_pair(res[2], 0), textures["kw"]));
+    setFigure(res[2], 7, std::make_unique<king>(figure::teams::BLACK, std::make_pair(res[2], 7), textures["kb"]));
+}
 
 
 bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
@@ -375,4 +476,72 @@ bool Board::isSquareAttack(std::pair<int, int> square, figure::teams team) const
         }
     }
     return false;
+}
+
+bool Board::fisherCastle(bool kingSide){ //функция для рокировки по фишеру
+    figure::teams team = getCurrentTeam(); //получаем команду
+    int gor = (team == figure::WHITE ? 0 : 7); //получаем горизонталь
+
+    int kingX = -1;
+    for(int x = 0; x < 8; ++x){ //ищем короля
+        figure* f = getFigure(x, gor);
+        if(f && f->getFigureType() == figure::KING && f->getTeam() == team){
+            kingX = x;
+            break;
+        }
+    }
+
+    figure* king = getFigure(kingX, gor);
+
+    if(king->getMoved() || isKingInCheck(team)){ //проверяем, шевелился ли он и под шахом ли он
+        return false;
+    }
+
+    int rookX = -1;
+    if(kingSide){ //ищем ладью
+        for(int x = kingX + 1; x<8; ++x){
+            figure* f = getFigure(x, gor);
+            if (f && f->getFigureType() == figure::ROOK && f->getTeam() == team) {
+                rookX = x;
+                break;
+                }
+            }
+    
+        }
+    else {
+        for(int x = kingX - 1; x>=0; --x){
+            figure* f = getFigure(x, gor);
+            if (f && f->getFigureType() == figure::ROOK && f->getTeam() == team) {
+                rookX = x;
+                break;
+                }
+            }
+    
+        }
+    if(rookX < 0) return false;
+    figure* rook = getFigure(rookX, gor);
+
+    if(rook->getMoved()) return false; //если ладья ходила, то фолс
+
+    int step = (rookX > kingX ? +1 : -1);
+    for(int x = kingX + step; x != rookX; x += step){ //проверяем, есть кто то между или нет
+        if (isOccupied(x, gor)) return false;
+    }
+
+    int kingToX = kingSide ? 6 : 2; //проверяем, атакуются ли клетки для перехода
+    for(int x = kingX; ; x += (kingToX > kingX ? +1 : -1)){
+        if(isSquareAttack({x, gor}, team)) return false;
+        if(x == kingToX) break;
+    }
+
+    int rookToX = kingSide ? 5 : 3;
+
+    board[gor][kingToX] = std::move(board[gor][kingX]); //переставляем
+    king->setPos({kingToX, gor});
+    king->setMoved(true);
+
+    board[gor][kingX].reset();
+    board[gor][rookX].reset();
+
+    return true;
 }
