@@ -31,6 +31,8 @@ public:
     bool isKingInMate(figure::teams team); //проверка на мат
     bool isKingInStalemate(figure::teams team); //проверка на пат
     bool isSquareAttack(std::pair<int, int> square, figure::teams team) const; //проверка квадрата на атаку для рокировки
+    void fisherPos(std::map<std::string, sf::Texture>& textures); //расстановка по фишеру
+    bool fisherCastle(bool kingSide); //функция для рокировки фишера
 
 
 
