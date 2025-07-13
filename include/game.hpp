@@ -69,7 +69,9 @@ void processEvents( // обработать все события на окне 
     bool& hasMoved,
     float OFFSETX,
     float OFFSETY,
-    float CELLSIZE
+    float CELLSIZE,
+    sf::RectangleShape* rightCastle = nullptr, // только для fisher
+    sf::RectangleShape* leftCastle = nullptr // только для fisher
 );
 
 void drawMoveHighlights( // нарисовать все возможные ходы
@@ -142,6 +144,8 @@ void selectFigureToConvert(Board* board,
     std::map<std::string, sf::Texture>& textures,
     float OFFSETX,
     float CELLSIZE);
+
+void drawCastleButtons(sf::RenderWindow& window,sf::RectangleShape& rightCastle, sf::RectangleShape& leftCastle,sf::Font& font); // отрисовать кнопки рокировки для фишера
 
 void drawEndGameScreen(sf::RenderWindow& window, //отрисовать меню завершения игры
     figure::teams winner,

@@ -187,7 +187,9 @@ void processEvents(
     bool& hasMoved,
     float OFFSETX,
     float OFFSETY,
-    float CELLSIZE
+    float CELLSIZE,
+    sf::RectangleShape* rightCastle,
+    sf::RectangleShape* leftCastle 
 ) {
     sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
     while (window.pollEvent(event)) { // получаем постоянно событие какое то
@@ -204,7 +206,6 @@ void processEvents(
                 }
                 return;
             }
-            
             // если пешка на клетке для превращения
             if (board->convertFlag){
                 selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE); // выбираем и превращаем
@@ -233,6 +234,12 @@ void processEvents(
                         selectedFigure, possibleMoves
                     );
                 }
+            }
+            if (leftCastle and rightCastle){ // если существуют кнопки рокировки -> режим фишера
+                if ((*leftCastle).getGlobalBounds().contains(mousePos)) // если нажали на кнопки рокировки в фишере
+                    board->fisherCastle(false);
+                else if ((*rightCastle).getGlobalBounds().contains(mousePos))
+                    board->fisherCastle(true);
             }
         }
     }
@@ -451,6 +458,17 @@ void selectFigureToConvert(Board* board,
 }
 
 
+void drawCastleButtons(sf::RenderWindow& window,sf::RectangleShape& rightCastle, sf::RectangleShape& leftCastle,sf::Font& font){// отрисовать кнопки рокировки для фишера
+    rightCastle = makeButton(50, 50, sf::Color(177, 199, 90), sf::Color::Black); // создаем кнопку
+    rightCastle.setPosition(875, window.getSize().y/2+25); // ставим на позицию
+    window.draw(rightCastle); // отрисовываем
+    drawLabel(window, font, rightCastle, "right\ncastle", 18); // и отрисовываем текст на ней
+
+    leftCastle = makeButton(50, 50, sf::Color(177, 199, 90), sf::Color::Black); // создаем кнопку
+    leftCastle.setPosition(875, window.getSize().y/2-25); // ставим на позицию
+    window.draw(leftCastle); // отрисовываем
+    drawLabel(window, font, leftCastle, "left\ncastle", 18); // и отрисовываем текст на ней
+} 
 
 void drawEndGameScreen(sf::RenderWindow& window,  // отрисовать экран конца игры
                        figure::teams winner,

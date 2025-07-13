@@ -4,7 +4,7 @@
 #include "engine.hpp"
 #include <iostream>
 
-void vsPlayer(sf::RenderWindow& window,sf::Font& font){    // отдельная функция для игры против игрока
+void vsPlayerStandart(sf::RenderWindow& window,sf::Font& font){    // отдельная функция для игры против игрока
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -85,6 +85,90 @@ void vsPlayer(sf::RenderWindow& window,sf::Font& font){    // отдельная
     delete board; // отчищаем память от твоей доски 😥😥😣😣😥
 }
 
+void vsPlayerFisher(sf::RenderWindow& window,sf::Font& font){    // отдельная функция для игры против игрока
+    const float CELLSIZE = 100.f; // размер клетки
+    const float OFFSETX = 50.f; // отстпуп для букв слева
+    const float OFFSETY = 50.f; // отступ для цифр снизу
+    
+    //буквы
+    sf::Text letters[8];
+    createLetters(letters, font, CELLSIZE, OFFSETX, OFFSETY);
+
+    //цифры
+    sf::Text numbers[8];
+    createNumbers(numbers, font, CELLSIZE, OFFSETY);
+
+    std::map<std::string, sf::Texture> textures; // мапа текстур
+    loadTextures(textures);
+    Board* board = new Board();  // создание твоей доски (❁´◡`❁)
+    board->fisherPos(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+
+    bool isFigureSelected = false; // фигура сейчас выбрана для хода
+    figure* selectedFigure = nullptr; 
+    std::vector<std::pair<int, int>> possibleMoves; // возможные ходы для выбранной фигуры
+
+    bool endGameScreen=false; // должен ли быть экран завершения игры?
+    sf::RectangleShape newGameButtonRect; // прямоугольник для начала новой игры
+
+    std::vector<sf::Sprite> to_choose; // спрайты фигур в меню выбора
+    std::vector<sf::RectangleShape> rectangles_to_choose; // прямоугольники на заднем плане в меню выбора
+
+    sf::RectangleShape rightCastle;
+    sf::RectangleShape leftCastle;
+
+    sf::RectangleShape lastMoveFrom(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик откуда последний ход
+    sf::RectangleShape lastMoveTo(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик куда последний ход
+    lastMoveFrom.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
+    lastMoveTo.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
+    bool hasMoved = false; // флаг был ли уже ход а то при запуске когда хода не было сделано эти квадраты просто на угол уезжали и закрывали часть окна
+
+    // создаем доску
+    sf::RectangleShape boardRectangles[8][8];
+    initializeBoardRectangles(boardRectangles, CELLSIZE, OFFSETX, OFFSETY);
+
+    while (window.isOpen()){
+        processEvents(window, board, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE, &rightCastle, &leftCastle); // обрабатываем все возможные события клик мыши и тд
+
+        window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
+
+        drawBoardAndLabels(window, boardRectangles, letters, numbers); // рисуем доску и цифры буквы
+        if (hasMoved) { // если ход был рисуем зеленые квадраты на последнем ходу
+            window.draw(lastMoveFrom);
+            window.draw(lastMoveTo);
+        }
+        if (board->isKingInCheck(figure::BLACK)){ // если какому нибудь королю стоит шах нарисовать красный квадрат на нем
+            drawCheck(window,board,figure::BLACK,OFFSETX,OFFSETY,CELLSIZE);
+        }else if(board->isKingInCheck(figure::WHITE)){
+            drawCheck(window,board,figure::WHITE,OFFSETX,OFFSETY,CELLSIZE);
+        }
+
+        drawFigures(window, board, CELLSIZE, OFFSETX, OFFSETY); // рисуем фигуры
+
+        if (board->isKingInMate(figure::WHITE)){ // если у кого то мат или пат рисуем экран конца игры
+            drawEndGameScreen(window,figure::BLACK,font, newGameButtonRect); 
+            endGameScreen=true;
+        }else if(board->isKingInMate(figure::BLACK)){
+            drawEndGameScreen(window,figure::WHITE,font, newGameButtonRect);
+            endGameScreen=true;
+        }else if (board->isKingInStalemate(figure::WHITE) or board->isKingInStalemate(figure::BLACK)){
+            drawEndGameScreen(window,figure::NONE,font, newGameButtonRect);
+            endGameScreen=true;
+        }
+
+        if (isFigureSelected) { // если фигура выбрана
+            drawMoveHighlights(window, possibleMoves, *board, selectedFigure, OFFSETX, OFFSETY, CELLSIZE); // рисуем возможные ходы
+        }
+
+        if (board->convertFlag){ // если пешка на клетке для превращения
+            createChoiceMenu(board, to_choose, rectangles_to_choose, textures, OFFSETX, OFFSETY, CELLSIZE); // создаем и отрисовываем меню выбора
+            drawChoiceMenu(window, to_choose, rectangles_to_choose);
+        }
+        drawCastleButtons(window,rightCastle,leftCastle,font);
+        window.display(); // показывалось окно чтобы
+    }
+    delete board; // отчищаем память от твоей доски 😥😥😣😣😥
+}
+
 void vsComputer(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam){// отдельная функция для игры против компьютера
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
@@ -102,7 +186,6 @@ void vsComputer(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam)
     loadTextures(textures);
     Board* board = new Board();  // создание твоей доски (❁´◡`❁)
     board->initialize(textures);
-    //board->fisherPos(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
 
     bool isFigureSelected = false; // фигура сейчас выбрана для хода
     figure* selectedFigure = nullptr; 
@@ -173,7 +256,16 @@ void vsComputer(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam)
                     }
                 } 
                 
-                board->makeMove({fx, fy}, {tx, ty});//выполняем ход
+                if (board->makeMove({fx, fy}, {tx, ty})){//выполняем ход
+                    lastMoveFrom.setPosition(
+                    OFFSETX + fx * CELLSIZE,
+                    OFFSETY + (7 - fy) * CELLSIZE
+                    );
+                    lastMoveTo.setPosition(
+                        OFFSETX + tx * CELLSIZE,
+                        OFFSETY + (7 - ty) * CELLSIZE
+                    );
+                }
 
                 
                 if (prom != '\0') {
@@ -368,6 +460,8 @@ int main() {
     if (player == 1 and mode == 1) // запускаем функцию подходящию под выбранные настройки
         vsComputer(window,font,userTeam);
     else if (player == 2 and mode == 1)
-        vsPlayer(window,font);
+        vsPlayerStandart(window,font);
+    else if (player == 2 and mode == 2)
+        vsPlayerFisher(window,font);
     return 0;
 }

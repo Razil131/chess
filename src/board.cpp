@@ -141,27 +141,27 @@ void Board::initialize(std::map<std::string, sf::Texture>& textures){ //функ
         setFigure(x, 1, std::make_unique<pawn>(figure::teams::WHITE, std::make_pair(x, 1), textures["pw"])); //ставим белые пешки
         setFigure(x, 6, std::make_unique<pawn>(figure::teams::BLACK, std::make_pair(x, 6), textures["pb"])); //ставим черные пешки
     }
-    // //ставим ладьи на их места
-    // setFigure(0, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(0, 0), textures["rw"]));
-    // setFigure(7, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(7, 0), textures["rw"]));
-    // setFigure(0, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(0, 7), textures["rb"]));
-    // setFigure(7, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(7, 7), textures["rb"]));
+    //ставим ладьи на их места
+    setFigure(0, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(0, 0), textures["rw"]));
+    setFigure(7, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(7, 0), textures["rw"]));
+    setFigure(0, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(0, 7), textures["rb"]));
+    setFigure(7, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(7, 7), textures["rb"]));
 
-    // //ставим коней
-    // setFigure(1, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(1, 0), textures["nw"]));
-    // setFigure(6, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(6, 0), textures["nw"]));
-    // setFigure(1, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(1, 7), textures["nb"]));
-    // setFigure(6, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(6, 7), textures["nb"]));
+    //ставим коней
+    setFigure(1, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(1, 0), textures["nw"]));
+    setFigure(6, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(6, 0), textures["nw"]));
+    setFigure(1, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(1, 7), textures["nb"]));
+    setFigure(6, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(6, 7), textures["nb"]));
 
-    // //ставим слонов
-    // setFigure(2, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(2, 0), textures["bw"]));
-    // setFigure(5, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(5, 0), textures["bw"]));
-    // setFigure(2, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(2, 7), textures["bb"]));
-    // setFigure(5, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(5, 7), textures["bb"]));
+    //ставим слонов
+    setFigure(2, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(2, 0), textures["bw"]));
+    setFigure(5, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(5, 0), textures["bw"]));
+    setFigure(2, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(2, 7), textures["bb"]));
+    setFigure(5, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(5, 7), textures["bb"]));
 
-    // //ставим ферзей
-    // setFigure(3, 0, std::make_unique<queen>(figure::teams::WHITE, std::make_pair(3, 0), textures["qw"]));
-    // setFigure(3, 7, std::make_unique<queen>(figure::teams::BLACK, std::make_pair(3, 7), textures["qb"]));
+    //ставим ферзей
+    setFigure(3, 0, std::make_unique<queen>(figure::teams::WHITE, std::make_pair(3, 0), textures["qw"]));
+    setFigure(3, 7, std::make_unique<queen>(figure::teams::BLACK, std::make_pair(3, 7), textures["qb"]));
 
     //ставим королей
     setFigure(4, 0, std::make_unique<king>(figure::teams::WHITE, std::make_pair(4, 0), textures["kw"]));
