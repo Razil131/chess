@@ -7,7 +7,7 @@ class Board;
 
 class figure { //общий класс фигур
 public:
-    enum teams { BLACK, WHITE }; //цвет
+    enum teams { BLACK, WHITE, NONE}; //цвет NONE чтобы ничью выводить удобно было
     enum figureTypes { BISHOP, KING, KNIGHT, PAWN, QUEEN, ROOK }; //тип
 
 protected: 
