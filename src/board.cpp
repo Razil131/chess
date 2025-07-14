@@ -5,6 +5,7 @@
 #include "bishop.hpp"
 #include "queen.hpp"
 #include "king.hpp"
+#include <sstream>
 #include <algorithm>
 #include <iostream>
 #include <random>
@@ -267,6 +268,41 @@ void Board::fisherPos(std::map<std::string, sf::Texture>& textures){ //функ�
     // //ставим королей
     setFigure(res[2], 0, std::make_unique<king>(figure::teams::WHITE, std::make_pair(res[2], 0), textures["kw"]));
     setFigure(res[2], 7, std::make_unique<king>(figure::teams::BLACK, std::make_pair(res[2], 7), textures["kb"]));
+
+    //генерируем строку для позиции
+    std::ostringstream fenStream;
+    
+    for(int y = 7; y >= 0; --y){ //перебираем ряды
+        int emptycount = 0;
+        for(int x = 0; x < 8; ++x){
+            figure* fig = getFigure(x, y);
+            if(!fig){
+                ++emptycount;
+            } else{
+                if(emptycount){
+                    fenStream << emptycount;
+                    emptycount = 0;
+                }
+                char c;
+                switch (fig->getFigureType()){
+                    case figure::PAWN: c = 'P'; break;
+                    case figure::KNIGHT: c = 'N'; break;
+                    case figure::BISHOP: c = 'B'; break;
+                    case figure::ROOK: c = 'R'; break;
+                    case figure::QUEEN: c = 'Q'; break;
+                    case figure::KING: c = 'K'; break;
+                    default: c = '?'; break;
+                }
+                if(fig->getTeam() == figure::BLACK)
+                c = std::tolower(c);
+                fenStream << c;
+            }
+        }
+        if(emptycount) fenStream << emptycount;
+        if(y>0) fenStream << '/';
+    }
+    fenStream << " w KQkq - 0 1";
+    this-> fenPos = fenStream.str();
 }
 
 
@@ -536,12 +572,36 @@ bool Board::fisherCastle(bool kingSide){ //функция для рокиров�
 
     int rookToX = kingSide ? 5 : 3;
 
-    board[gor][kingToX] = std::move(board[gor][kingX]); //переставляем
+    if ((kingToX != kingX && isOccupied(kingToX, gor)) || (rookToX != rookX && isOccupied(rookToX, gor))) {
+       return false;
+    }
+
+    std::unique_ptr<figure> kingPtr, rookPtr;
+    if (kingToX != kingX) kingPtr = std::move(board[gor][kingX]);
+    if (rookToX != rookX) rookPtr = std::move(board[gor][rookX]);
+
+    if (kingToX != kingX) board[gor][kingToX] = std::move(kingPtr);
+    if (rookToX != rookX) board[gor][rookToX] = std::move(rookPtr);
+
+    if (kingToX != kingX) board[gor][kingX].reset();
+    if (rookToX != rookX) board[gor][rookX].reset();
+
+
     king->setPos({kingToX, gor});
+    rook->setPos({rookToX, gor});
+
     king->setMoved(true);
+    rook->setMoved(true);
 
-    board[gor][kingX].reset();
-    board[gor][rookX].reset();
-
+    std::string move;
+    move += static_cast<char>('a' + kingX);
+    move += static_cast<char>('1' + gor);
+    move += static_cast<char>('a' + kingToX);
+    move += static_cast<char>('1' + gor);
+    
+    movesUCI.push_back(move);
+    
+    moveCount++;
+    castleflag = true;
     return true;
 }

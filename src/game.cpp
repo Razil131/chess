@@ -189,7 +189,7 @@ void processEvents(
     float OFFSETY,
     float CELLSIZE,
     sf::RectangleShape* rightCastle,
-    sf::RectangleShape* leftCastle 
+    sf::RectangleShape* leftCastle
 ) {
     sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
     while (window.pollEvent(event)) { // получаем постоянно событие какое то
@@ -237,9 +237,11 @@ void processEvents(
             }
             if (leftCastle and rightCastle){ // если существуют кнопки рокировки -> режим фишера
                 if ((*leftCastle).getGlobalBounds().contains(mousePos)) // если нажали на кнопки рокировки в фишере
-                    board->fisherCastle(false);
+                    {board->fisherCastle(false);
+                    }
                 else if ((*rightCastle).getGlobalBounds().contains(mousePos))
-                    board->fisherCastle(true);
+                    {board->fisherCastle(true);
+                    }
             }
         }
     }

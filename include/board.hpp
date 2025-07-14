@@ -43,8 +43,10 @@ public:
     std::pair<std::pair<int, int>, std::pair<int, int>> lastMove; //переменная для хранения последнего хода
     bool mateFlag = false;//флаг для мата
     bool staleMateFlag = false; //флаг для пата
+    bool castleflag = false;
 
     std::vector<std::string> movesUCI; //будем тут хранить ходы в формате для движка
+    std::string fenPos; //тут мы храним позицию для фишера вс компьютера
 
 
 private:

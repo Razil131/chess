@@ -127,6 +127,7 @@ void vsPlayerFisher(sf::RenderWindow& window,sf::Font& font){    // отдель
     initializeBoardRectangles(boardRectangles, CELLSIZE, OFFSETX, OFFSETY);
 
     while (window.isOpen()){
+        bool handled = false;
         processEvents(window, board, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE, &rightCastle, &leftCastle); // обрабатываем все возможные события клик мыши и тд
 
         window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
@@ -342,6 +343,189 @@ void vsComputer(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam)
     engine.stop();
 }
 
+void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam){// отдельная функция для игры против компьютера
+    const float CELLSIZE = 100.f; // размер клетки
+    const float OFFSETX = 50.f; // отстпуп для букв слева
+    const float OFFSETY = 50.f; // отступ для цифр снизу
+    
+    //буквы
+    sf::Text letters[8];
+    createLetters(letters, font, CELLSIZE, OFFSETX, OFFSETY);
+
+    //цифры
+    sf::Text numbers[8];
+    createNumbers(numbers, font, CELLSIZE, OFFSETY);
+
+    std::map<std::string, sf::Texture> textures; // мапа текстур
+    loadTextures(textures);
+    Board* board = new Board();  // создание твоей доски (❁´◡`❁)
+    board->fisherPos(textures);
+
+    bool isFigureSelected = false; // фигура сейчас выбрана для хода
+    figure* selectedFigure = nullptr; 
+    std::vector<std::pair<int, int>> possibleMoves; // возможные ходы для выбранной фигуры
+
+    bool endGameScreen=false; // должен ли быть экран завершения игры?
+    sf::RectangleShape newGameButtonRect; // прямоугольник для начала новой игры
+
+    std::vector<sf::Sprite> to_choose; // спрайты фигур в меню выбора
+    std::vector<sf::RectangleShape> rectangles_to_choose; // прямоугольники на заднем плане в меню выбора
+
+    sf::RectangleShape rightCastle;
+    sf::RectangleShape leftCastle;
+
+    sf::RectangleShape lastMoveFrom(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик откуда последний ход
+    sf::RectangleShape lastMoveTo(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик куда последний ход
+    lastMoveFrom.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
+    lastMoveTo.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
+    bool hasMoved = false; // флаг был ли уже ход а то при запуске когда хода не было сделано эти квадраты просто на угол уезжали и закрывали часть окна
+  
+    // создаем доску
+    sf::RectangleShape boardRectangles[8][8];
+    initializeBoardRectangles(boardRectangles, CELLSIZE, OFFSETX, OFFSETY);
+  
+    Engine engine;
+    const char* enginePath = "..\\stockfish\\stockfish-windows-x86-64-avx2.exe"; //траим запустить движок
+    if (!engine.launch(enginePath)) {
+        std::cerr << "ERROR: не удалось запустить движок по пути `" << enginePath << "`\n";
+        delete board;
+        return;
+    }
+    engine.sendCommand("uci"); //включаем протокол UCI 😎
+    engine.sendCommand("setoption name UCI_Chess960 value true"); //запускаем фишера
+    engine.sendCommand("isready"); //проверяем готовность
+    engine.sendCommand(std::string("position fen ") + board->fenPos); //сообщаем позицию боту
+    while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
+        if (board->getCurrentTeam() != userTeam) { //проверяем когда ходит бот
+            if(board->castleflag){
+                board->castleflag = false;
+            }
+            else {
+                std::string moves; 
+            for (const auto& move : board->movesUCI) { //переводим ходы из наших координат в е2е4 условные
+                moves += move + " ";
+            }
+
+            engine.sendCommand(std::string("position fen ") + board->fenPos + " moves " + moves); //отправляем позицию движку
+            engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
+
+            std::string bestmove;//получаем лучший ход
+            do {
+                auto resp = engine.readLine();
+                if (resp.find("bestmove") != std::string::npos) {
+                size_t start = resp.find("bestmove") + 9;
+                size_t end = resp.find(' ', start);
+                bestmove = (end == std::string::npos) ? resp.substr(start) : resp.substr(start, end - start);
+                }
+            } while (bestmove.empty());
+
+            if (bestmove == "resign") {
+                endGameScreen=true; // чет написал когда сдается но хз как проверить работает ли но вроде должно
+                drawEndGameScreen(window,userTeam, font, newGameButtonRect);
+            }
+
+            //парсим координаты
+            int fx, fy, tx, ty;
+            char prom = '\0';
+            if (bestmove.length() >= 4) {
+                fx = bestmove[0] - 'a';
+                fy = bestmove[1] - '1';
+                tx = bestmove[2] - 'a';
+                ty = bestmove[3] - '1';
+                
+                if (bestmove.length() >= 5) {// символ превращения
+                    prom = bestmove[4];
+                    }
+                } 
+                
+                if (board->makeMove({fx, fy}, {tx, ty})){//выполняем ход
+                    lastMoveFrom.setPosition(
+                    OFFSETX + fx * CELLSIZE,
+                    OFFSETY + (7 - fy) * CELLSIZE
+                    );
+                    lastMoveTo.setPosition(
+                        OFFSETX + tx * CELLSIZE,
+                        OFFSETY + (7 - ty) * CELLSIZE
+                    );
+                }
+
+                
+                if (prom != '\0') {
+                figure::figureTypes newType;
+                switch (prom) {
+                    case 'r': newType = figure::ROOK; break;
+                    case 'b': newType = figure::BISHOP; break;
+                    case 'n': newType = figure::KNIGHT; break;
+                    case 'q': 
+                    default: newType = figure::QUEEN;
+                }
+
+                std::string teamChar = (userTeam == figure::WHITE) ? "b" : "w"; //определяем команду бота
+                std::string textureName;
+                switch (newType) {
+                    case figure::QUEEN: textureName = "q" + teamChar; break;
+                    case figure::ROOK: textureName = "r" + teamChar; break;
+                    case figure::BISHOP: textureName = "b" + teamChar; break;
+                    case figure::KNIGHT: textureName = "n" + teamChar; break;
+                    default: textureName = "q" + teamChar;
+                }
+
+                board->convertPawn(tx, ty, newType, textures[textureName]); //превращаем
+                
+
+                board->convertFlag = false;
+            }
+            }
+            
+        }
+        processEvents(window, board, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE, &rightCastle, &leftCastle); // обрабатываем все возможные события клик мыши и тд
+
+        
+
+        window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
+
+        drawBoardAndLabels(window, boardRectangles, letters, numbers); // рисуем доску и цифры буквы
+        if (hasMoved) { // если ход был рисуем зеленые квадраты на последнем ходу
+            window.draw(lastMoveFrom);
+            window.draw(lastMoveTo);
+        }
+        if (board->isKingInCheck(figure::BLACK)){ // если какому нибудь королю стоит шах нарисовать красный квадрат на нем
+            drawCheck(window,board,figure::BLACK,OFFSETX,OFFSETY,CELLSIZE);
+        }else if(board->isKingInCheck(figure::WHITE)){
+            drawCheck(window,board,figure::WHITE,OFFSETX,OFFSETY,CELLSIZE);
+        }
+
+        drawFigures(window, board, CELLSIZE, OFFSETX, OFFSETY); // рисуем фигуры
+
+        
+
+        if (board->isKingInMate(figure::WHITE)){ // если у кого то мат или пат рисуем экран конца игры
+            drawEndGameScreen(window,figure::BLACK,font, newGameButtonRect); 
+            endGameScreen=true;
+        }else if(board->isKingInMate(figure::BLACK)){
+            drawEndGameScreen(window,figure::WHITE,font, newGameButtonRect);
+            endGameScreen=true;
+        }else if (board->isKingInStalemate(figure::WHITE) or board->isKingInStalemate(figure::BLACK)){
+            drawEndGameScreen(window,figure::NONE,font, newGameButtonRect);
+            endGameScreen=true;
+        }
+
+        if (isFigureSelected) { // если фигура выбрана
+            drawMoveHighlights(window, possibleMoves, *board, selectedFigure, OFFSETX, OFFSETY, CELLSIZE); // рисуем возможные ходы
+        }
+
+        if (board->convertFlag && board->getCurrentTeam() == userTeam){ // если пешка на клетке для превращения
+            createChoiceMenu(board, to_choose, rectangles_to_choose, textures, OFFSETX, OFFSETY, CELLSIZE); // создаем и отрисовываем меню выбора
+            drawChoiceMenu(window, to_choose, rectangles_to_choose);
+        }
+        drawCastleButtons(window,rightCastle,leftCastle,font);
+        window.display(); // показывалось окно чтобы
+        
+    }
+    delete board; // отчищаем память от твоей доски 😥😥😣😣😥
+    engine.stop();
+}
+
 int main() {
     sf::RenderWindow window(sf::VideoMode(900, 900), "Chess", sf::Style::Titlebar | sf::Style::Close); // создаем окошечно так сказать 900 на 900 пикселей с название Chess
 
@@ -463,5 +647,7 @@ int main() {
         vsPlayerStandart(window,font);
     else if (player == 2 and mode == 2)
         vsPlayerFisher(window,font);
+    else if (player == 1 and mode == 2)
+        vsComputerFisher(window,font, userTeam);
     return 0;
 }
