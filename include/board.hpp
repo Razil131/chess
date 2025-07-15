@@ -33,6 +33,9 @@ public:
     bool isSquareAttack(std::pair<int, int> square, figure::teams team) const; //проверка квадрата на атаку для рокировки
     void fisherPos(std::map<std::string, sf::Texture>& textures); //расстановка по фишеру
     bool fisherCastle(bool kingSide); //функция для рокировки фишера
+    void updateFen(); //функция для обновления фен позиции
+    bool exportToFile(const std::string& filename, int players, int mode); // функция для создания сохранения
+    bool importFromFile(const std::string& filename,  std::map<std::string, sf::Texture>& textures, int& players, int& mode); //для загрузки
 
 
 
@@ -44,6 +47,14 @@ public:
     bool mateFlag = false;//флаг для мата
     bool staleMateFlag = false; //флаг для пата
     bool castleflag = false;
+    bool whiteCanCastleKingSide;//права на рокировку
+    bool whiteCanCastleQueenSide;
+    bool blackCanCastleKingSide;
+    bool blackCanCastleQueenSide;
+    int whiteRookKS; //координаты ладей
+    int whiteRookQS;
+    int blackRookKS;
+    int blackRookQS;
 
     std::vector<std::string> movesUCI; //будем тут хранить ходы в формате для движка
     std::string fenPos; //тут мы храним позицию для фишера вс компьютера

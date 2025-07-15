@@ -391,92 +391,71 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams use
     engine.sendCommand("setoption name UCI_Chess960 value true"); //запускаем фишера
     engine.sendCommand("isready"); //проверяем готовность
     engine.sendCommand(std::string("position fen ") + board->fenPos); //сообщаем позицию боту
+
+
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
-        if (board->getCurrentTeam() != userTeam) { //проверяем когда ходит бот
-            if(board->castleflag){
-                board->castleflag = false;
-            }
-            else {
-                std::string moves; 
-            for (const auto& move : board->movesUCI) { //переводим ходы из наших координат в е2е4 условные
-                moves += move + " ";
-            }
-
-            engine.sendCommand(std::string("position fen ") + board->fenPos + " moves " + moves); //отправляем позицию движку
-            engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
-
-            std::string bestmove;//получаем лучший ход
-            do {
-                auto resp = engine.readLine();
-                if (resp.find("bestmove") != std::string::npos) {
-                size_t start = resp.find("bestmove") + 9;
-                size_t end = resp.find(' ', start);
-                bestmove = (end == std::string::npos) ? resp.substr(start) : resp.substr(start, end - start);
-                }
-            } while (bestmove.empty());
-
-            if (bestmove == "resign") {
-                endGameScreen=true; // чет написал когда сдается но хз как проверить работает ли но вроде должно
-                drawEndGameScreen(window,userTeam, font, newGameButtonRect);
-            }
-
-            //парсим координаты
-            int fx, fy, tx, ty;
-            char prom = '\0';
-            if (bestmove.length() >= 4) {
-                fx = bestmove[0] - 'a';
-                fy = bestmove[1] - '1';
-                tx = bestmove[2] - 'a';
-                ty = bestmove[3] - '1';
-                
-                if (bestmove.length() >= 5) {// символ превращения
-                    prom = bestmove[4];
-                    }
-                } 
-                
-                if (board->makeMove({fx, fy}, {tx, ty})){//выполняем ход
-                    lastMoveFrom.setPosition(
-                    OFFSETX + fx * CELLSIZE,
-                    OFFSETY + (7 - fy) * CELLSIZE
-                    );
-                    lastMoveTo.setPosition(
-                        OFFSETX + tx * CELLSIZE,
-                        OFFSETY + (7 - ty) * CELLSIZE
-                    );
-                }
-
-                
-                if (prom != '\0') {
-                figure::figureTypes newType;
-                switch (prom) {
-                    case 'r': newType = figure::ROOK; break;
-                    case 'b': newType = figure::BISHOP; break;
-                    case 'n': newType = figure::KNIGHT; break;
-                    case 'q': 
-                    default: newType = figure::QUEEN;
-                }
-
-                std::string teamChar = (userTeam == figure::WHITE) ? "b" : "w"; //определяем команду бота
-                std::string textureName;
-                switch (newType) {
-                    case figure::QUEEN: textureName = "q" + teamChar; break;
-                    case figure::ROOK: textureName = "r" + teamChar; break;
-                    case figure::BISHOP: textureName = "b" + teamChar; break;
-                    case figure::KNIGHT: textureName = "n" + teamChar; break;
-                    default: textureName = "q" + teamChar;
-                }
-
-                board->convertPawn(tx, ty, newType, textures[textureName]); //превращаем
-                
-
-                board->convertFlag = false;
-            }
-            }
-            
-        }
+        
         processEvents(window, font, board, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE, &rightCastle, &leftCastle); // обрабатываем все возможные события клик мыши и тд
 
-        
+        if (board->getCurrentTeam() != userTeam) {
+        // 1.2) Формируем строку всех предыдущих ходов
+        std::string moves;
+        for (const auto& m : board->movesUCI) {
+            moves += m + " ";
+        }
+        // 1.3) Отправляем движку позицию и ждём лучший ход
+        engine.sendCommand("position fen " + board->fenPos + " moves " + moves);
+        engine.sendCommand("go movetime 1000");
+
+        std::string bestmove;
+        do {
+            auto resp = engine.readLine();
+            auto p = resp.find("bestmove");
+            if (p != std::string::npos) {
+                size_t s = p + 9, e = resp.find(' ', s);
+                bestmove = (e == std::string::npos)
+                           ? resp.substr(s)
+                           : resp.substr(s, e - s);
+            }
+        } while (bestmove.empty());
+
+        // 1.4) Разбираем UCI-строку bestmove
+        int fx = bestmove[0] - 'a';
+        int fy = bestmove[1] - '1';
+        int tx = bestmove[2] - 'a';
+        int ty = bestmove[3] - '1';
+        char prom = bestmove.size() >= 5 ? bestmove[4] : '\0';
+
+        // 1.5) Делаем ход через ваш метод
+        board->makeMove({fx, fy}, {tx, ty});
+         lastMoveFrom.setPosition(OFFSETX + fx * CELLSIZE,
+                                 OFFSETY + (7 - fy) * CELLSIZE);
+        lastMoveTo  .setPosition(OFFSETX + tx * CELLSIZE,
+                                 OFFSETY + (7 - ty) * CELLSIZE);
+        hasMoved = true;
+
+        // 1.6) Если была превращение — вызываем convertPawn
+        if (prom) {
+            figure::figureTypes newType;
+            switch (prom) {
+                case 'r': newType = figure::ROOK;   break;
+                case 'b': newType = figure::BISHOP; break;
+                case 'n': newType = figure::KNIGHT; break;
+                case 'q': default:  newType = figure::QUEEN;
+            }
+            // текстура выбирается по цвету ботa
+            std::string tname = (userTeam == figure::WHITE ? "b" : "w");
+            switch (newType) {
+                case figure::QUEEN:  tname = "q" + tname; break;
+                case figure::ROOK:   tname = "r" + tname; break;
+                case figure::BISHOP: tname = "b" + tname; break;
+                case figure::KNIGHT: tname = "n" + tname; break;
+                default: break;
+            }
+            board->convertPawn(tx, ty, newType, textures[tname]);
+        }      
+            board->convertFlag = false;       
+        }
 
         window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
 
