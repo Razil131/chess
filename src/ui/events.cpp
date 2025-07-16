@@ -1,4 +1,5 @@
 #include "events.hpp"
+
 void processEvents(
     sf::RenderWindow& window,
     sf::Font& font,
@@ -23,7 +24,6 @@ void processEvents(
     sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
     while (window.pollEvent(event)) { // получаем постоянно событие какое то
         handleWindowClose(window, event); // чтобы закрывалось окно
-
         if (event.type == sf::Event::MouseButtonPressed && // нажатие левой кнопки мыши
             event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y); // получаем положение курсора
@@ -75,11 +75,50 @@ void processEvents(
 }
 
 // закрывает окно по крестику
-void handleWindowClose(sf::RenderWindow& window, const sf::Event& event) {
+void handleWindowClose(sf::RenderWindow& window, const sf::Event& event, Board* board, int players, int mode, figure::teams color) {
     if (event.type == sf::Event::Closed) {
+        if (board){
+            board->exportToFile(getSaveFileName(mode,players,color)+".fen",players,mode);
+        }
         window.close();
     }
 }
+
+std::string handleSaveMenuEvents(sf::RenderWindow& win,
+                                 sf::Event& event,
+                                 std::map<std::string, sf::RectangleShape>& btns,
+                                 float& scrollOffset,
+                                 size_t savesCount,
+                                 float buttonHeight,
+                                 float gap,
+                                 float scrollSpeed)
+{
+
+    if (event.type == sf::Event::MouseWheelScrolled &&
+        event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel)
+    {
+        scrollOffset -= event.mouseWheelScroll.delta * scrollSpeed;
+        scrollOffset = scrollOffset > 0 ? scrollOffset : 0;
+
+        float totalHeight = savesCount * buttonHeight + (savesCount - 1) * gap;
+        float viewHeight  = static_cast<float>(win.getSize().y);
+        float maxOffset   = std::max(0.f, totalHeight - viewHeight);
+
+        scrollOffset = std::clamp(scrollOffset, (float)(0), maxOffset);
+    }
+    else if (event.type == sf::Event::MouseButtonPressed &&
+             event.mouseButton.button == sf::Mouse::Left)
+    {
+        sf::Vector2f mp(event.mouseButton.x, event.mouseButton.y);
+        for (auto& [key, btn] : btns) {
+            if (btn.getGlobalBounds().contains(mp))
+                return key;
+        }
+    }
+
+    return "";
+}
+
 
 // пытается выбрать фигуру под курсором
 void selectFigure(

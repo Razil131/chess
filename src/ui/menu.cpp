@@ -1,5 +1,6 @@
 #include "menu.hpp"
 
+
 sf::RectangleShape makeButton(float w, float h, sf::Color fill, sf::Color outline) { // функция создания кнопки
     sf::RectangleShape btn({w, h}); // создаем кнопки с заданой шириной и высотой
     btn.setFillColor(fill); // цвет
@@ -33,11 +34,20 @@ void drawMainMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShap
     btns.clear();
     const float W = 300, H = 60, M = 20; // параметры кнопок
     auto center = sf::Vector2f(win.getSize()) * 0.5f;
-    std::vector<std::pair<std::string, std::string>> list = { // список кнопок и их id
-        {"play",    "Play"},
-        {"puzzles", "Puzzles"},
-        {"exit",    "Exit"}
-    };
+    std::vector<std::pair<std::string, std::string>> list;
+    if (savesExists())
+        list = { // список кнопок и их id
+            {"continue", "Continue"},
+            {"play",    "Play"},
+            {"puzzles", "Puzzles"},
+            {"exit",    "Exit"}
+        };
+    else
+        list = { // список кнопок и их id
+            {"play",    "Play"},
+            {"puzzles", "Puzzles"},
+            {"exit",    "Exit"}
+        };
     float total = list.size()*H + (list.size()-1)*M; // сколько по высоте будут занимать кнопки
     float startY = center.y - total/2 + H/2; // с какого y начинать рисовать кнопки
     for (int i=0; i<list.size(); i++) { // по всему списку проходимся
@@ -48,6 +58,42 @@ void drawMainMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShap
         win.draw(btn); 
         drawLabel(win, font, btn, label); // рисуем текст на ней
     }
+}
+
+void drawSaveMenu(sf::RenderWindow& win,
+                  std::map<std::string, sf::RectangleShape>& btns,
+                  sf::RectangleShape& backBtn,
+                  const sf::Font& font,
+                  const std::vector<std::string>& saves,
+                  float scrollOffset)
+{
+    btns.clear();
+    const float W = win.getSize().x * 0.7f;
+    const float H = 40.f;
+    const float M = 10.f;                  
+    sf::Vector2f center{win.getSize()};
+    center *= 0.5f;
+
+
+    float startY = 10.f + H/2 - scrollOffset; // начало кнопок по y
+
+    float centerX = win.getSize().x * 0.5f; // горизонтальный центр
+
+    for (size_t i = 0; i < saves.size(); ++i) {
+        float y = startY + i * (H + M);
+        if (y + H/2 < 0 || y - H/2 > win.getSize().y)  // если кнопка целиком ушла за верх или низ — пропускаем
+            continue;
+
+        const std::string& name = saves[i];
+        auto btn = makeButton(W, H, sf::Color(200,200,200), sf::Color::Black); // рисуем кнопочки
+        btn.setPosition(centerX, y);
+        btns[name] = btn;
+        win.draw(btn);
+        drawLabel(win, font, btn, name, 18);
+    }
+
+    // кнопка back
+    drawBackButton(win, backBtn, font);
 }
 
 void drawPuzzleMenu(sf::RenderWindow& win, // отрисовка меню выбора задач #TODO сделать чтобы вообще эти задачи хоть как то работали
@@ -154,10 +200,11 @@ void drawColorMenu(sf::RenderWindow& win, // отрисовка меню выб�
     }
     drawBackButton(win, backBtn, font); // рисуем кнопку назад (back)
 } 
-
+// TODO сделать Draw...Menu отдельной функцией чтобы не повторяться
 void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенесена в game.cpp чтобы после окончания игры можно было меню открыть
-    enum MainMenuModes {MainMenu, Puzzles, ModeChoose ,EnemyChoose, TeamChoose, DEBUG}; // экраны в меню ЧТОБЫ ОТКЛЮЧИТЬ МЕНЮ DEBUG
-    
+    enum MainMenuModes {MainMenu, Puzzles, ModeChoose ,EnemyChoose, TeamChoose, Continue, DEBUG}; // экраны в меню ЧТОБЫ ОТКЛЮЧИТЬ МЕНЮ DEBUG
+
+
     MainMenuModes currentMode = MainMenu; // заменить MainMenu на DEBUG для отключения меню будет выбран режим по параметрам ниже
     int mode = 1; //тут по идее мы делаем от одного до 3, где 1 - дефлот шахматы, 2 - фишер, 3 - до 3 шахов
     int player = 1; //если 1 - игра с компом, если 2 - два игрока
@@ -165,16 +212,25 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
     figure::teams userTeam = figure::WHITE; 
     bool needToQuitMenuFlag = false;
 
+    auto saves = getSaveFiles(); 
+    float scrollOffset = 0.f; // где начало скрола
+    const float SAVEMENU_BTN_H = 40.f; // высота кнопок в savemenu
+    const float SAVEMENU_GAP   = 10.f; // расстояние между кнопками в savemenu
+
+
     std::map<std::string,sf::RectangleShape> menuButtonsRects; // мапа кнопок и их id на экране
     sf::RectangleShape backBtn; // кнопка назад 
     sf::RectangleShape createPuzzleBtn; // кнопка создания задачи
     std::string clickedButtonID; // и id кнопки на которую нажали
     while (window.isOpen()){ // основной цикл для меню заканчивается когда меню закрывается и открывается игра
+        window.clear(sf::Color(128,128,128));
         if (currentMode == DEBUG) // если DEBUG то сразу закрываем меню
             break;
-        window.clear(sf::Color(128,128,128));
         if (currentMode == MainMenu){ // отрисовывем нужное меню
             drawMainMenu(window,menuButtonsRects,font);
+        }
+        else if (currentMode == Continue){
+            drawSaveMenu(window,menuButtonsRects,backBtn,font,getSaveFiles(),scrollOffset);
         }
         else if (currentMode == ModeChoose){
             drawGameTypeMenu(window,menuButtonsRects,backBtn,font);
@@ -188,10 +244,17 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
         else if (currentMode == TeamChoose){
             drawColorMenu(window,menuButtonsRects,backBtn,font);
         }
+        window.display();
         sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
         while (window.pollEvent(event)){ // получаем постоянно событие какое то
+            handleWindowClose(window, event); // чтобы закрывалось окно TODO чтобы делало сейвы
             clickedButtonID = ""; // обнуляем кнопку а то back может несколько раз нажаться при однократном нажатии
-            handleWindowClose(window, event); // чтобы закрывалось окно
+            if (currentMode == Continue){ // 
+                std::string clickedSave = handleSaveMenuEvents(window, event, menuButtonsRects, scrollOffset, saves.size(),SAVEMENU_BTN_H, SAVEMENU_GAP);
+                if (!clickedSave.empty()) {
+                    // TODO сделать вход в сейв
+                }
+            }
             if (event.type == sf::Event::MouseButtonPressed && // нажатие левой кнопки мыши
                 event.mouseButton.button == sf::Mouse::Left) {
                 sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y); // получаем положение курсора
@@ -215,6 +278,9 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
             else if (clickedButtonID == "puzzles"){
                 currentMode = Puzzles;
             }
+            else if (clickedButtonID == "continue"){
+                currentMode = Continue;
+            } 
             else if (clickedButtonID == "classic"){
                 mode = 1;
                 currentMode = EnemyChoose;
@@ -249,6 +315,8 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
             else if (clickedButtonID == "back"){
                 if (currentMode == ModeChoose)
                     currentMode = MainMenu;
+                else if (currentMode == Continue)
+                    currentMode = MainMenu;
                 else if (currentMode == Puzzles)
                     currentMode = MainMenu;
                 else if (currentMode == EnemyChoose)
@@ -259,7 +327,6 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
                     currentMode = EnemyChoose;
             }
         }
-        window.display();
         if (needToQuitMenuFlag)
             break;
     }
