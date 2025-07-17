@@ -1,6 +1,5 @@
 #include "create_puzzle.hpp"
 
-// Инициализация меню выбора фигур: передаем контейнер, вектор спрайтов и фонов, а также параметры
 void createChooseFigureMenuCreatePuzzle(sf::RenderWindow& window,
     std::map<std::string, sf::Texture>& textures,
     std::pair<int,int> selectedCell,
@@ -12,18 +11,16 @@ void createChooseFigureMenuCreatePuzzle(sf::RenderWindow& window,
     sprites.clear();
     backgroundShapes.clear();
 
-    std::vector<std::string> types = {"k","q","b","n","r","p"};
-    const int cols = (int)types.size();
-    const int rows = 2;
-    const float padding = 5.f;
-    const float scaleFactor = 1.f / 2.f; // В 5 раз меньше
+    std::vector<std::string> types = {"k","q","b","n","r","p"}; // все фигуры
+    const int cols = (int)types.size(); // колонки
+    const int rows = 2; // строки
+    const float padding = 5.f; // отступ
+    const float scaleFactor = 1.f / 2.f; // размер иконок на панельке этой 
 
-    // Размер и шаг для иконок и их фона
     float iconSize = cellSize * scaleFactor;
     float stepX = iconSize + padding;
     float stepY = iconSize + padding;
 
-    // Размер контейнера остаётся базовым, либо можно подогнать под иконки
     float menuW = cols * stepX + padding;
     float menuH = rows * stepY + padding;
 
@@ -33,39 +30,33 @@ void createChooseFigureMenuCreatePuzzle(sf::RenderWindow& window,
     float menuX = baseX - menuW / 2;
     float menuY = baseY - menuH - padding;
 
-    // Корректировка окна
     if (menuX < 0) menuX = padding;
     if (menuX + menuW > window.getSize().x) menuX = window.getSize().x - menuW - padding;
     if (menuY < 0) menuY = baseY + padding;
     if (menuY + menuH > window.getSize().y) menuY = window.getSize().y - menuH - padding;
 
-    // Настройка контейнера
-    container.setSize({ menuW, menuH });
+    container.setSize({ menuW, menuH }); // настраиваем контейнер в котором все кнопки
     container.setPosition(menuX, menuY);
     container.setFillColor(sf::Color(50, 50, 50, 200));
     container.setOutlineColor(sf::Color::Black);
     container.setOutlineThickness(2.f);
 
-    // Создаем фон и спрайт для каждой иконки
-    for (int row = 0; row < rows; ++row) {
+    for (int row = 0; row < rows; ++row) {    // создаем фон и спрайт для каждой иконки
         for (int col = 0; col < cols; ++col) {
             float x = menuX + padding + col * stepX;
             float y = menuY + padding + row * stepY;
 
-            // Фон иконки
-            sf::RectangleShape bg({ iconSize, iconSize });
+            sf::RectangleShape bg({ iconSize, iconSize });  // фон иконки
             bg.setPosition(x, y);
             bg.setFillColor(sf::Color(200, 200, 200, 150));
             bg.setOutlineColor(sf::Color::Black);
             bg.setOutlineThickness(1.f);
             backgroundShapes.push_back(bg);
 
-            // Спрайт
             std::string key = types[col] + std::string(row == 0 ? "w" : "b");
-            sf::Sprite sp;
+            sf::Sprite sp; // спрайт
             sp.setTexture(textures.at(key));
-            // Масштаб под размер iconSize (с учётом отступов внутри)
-            float innerOffset = 2.f;
+            float innerOffset = 2.f;// масштаб под размер iconSize (с учётом отступов внутри)
             float scale = (iconSize - innerOffset * 2) / textures.at(key).getSize().y;
             sp.setScale(scale, scale);
             sf::FloatRect bnds = sp.getGlobalBounds();
@@ -78,7 +69,6 @@ void createChooseFigureMenuCreatePuzzle(sf::RenderWindow& window,
     }
 }
 
-// Отрисовать меню выбора фигур
 void drawChooseFigureMenuCreatePuzzle(sf::RenderWindow& window,
     sf::RectangleShape& container,
     std::vector<sf::Sprite>& sprites,

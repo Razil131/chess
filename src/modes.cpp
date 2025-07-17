@@ -804,13 +804,13 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams use
 }
 // TODO разбить этот код на функции а то чет слишком много повторов
 
-
+// открыть меню создания задачи
 void createPuzzle(sf::RenderWindow& window,sf::Font& font){
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
     
-    enum createPuzzleModes {Setup,Game};
+    enum createPuzzleModes {Setup,Game}; // режими сначало расстановка фигур потом ходить надо(Game)
 
     createPuzzleModes currentMode = Setup;
 
@@ -827,15 +827,15 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
     Board* board = new Board();  // создание твоей доски (❁´◡`❁)
     board->clear();
 
-    std::pair<int,int> selectedCell = std::make_pair(-1,-1);
+    std::pair<int,int> selectedCell = std::make_pair(-1,-1); // выбраная клетка на которую ставить будем фигуру
     bool cellIsSelected = false; 
-    int choosedFigurePos;
+    int choosedFigurePos; // позиция фигуры в меню выбора от 0 до 11
 
     std::vector<sf::Sprite> figureSpritesToChoose; // спрайты фигур в меню выбора
     std::vector<sf::RectangleShape> rectanglesToChoose; // прямоугольники на заднем плане в меню выбора
-    sf::RectangleShape container; 
+    sf::RectangleShape container; // прямоугольник в котором все кнопки в меню выбора
 
-    sf::RectangleShape nextModeBtnShape;
+    sf::RectangleShape nextModeBtnShape; // кнопка перехода на след режим
 
     sf::RectangleShape choosedCellRect(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик отображающий клетку выбраную
     choosedCellRect.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
@@ -859,31 +859,30 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
     while (window.isOpen()){
         window.clear(sf::Color(128,128,128));
         sf::Event event;
-        if (currentMode == Setup){
+        if (currentMode == Setup){// если расстановка фигур
             while (window.pollEvent(event)) {
                 handleWindowClose(window,event);
                 if (event.type == sf::Event::MouseButtonPressed && // нажатие левой кнопки мыши
                 event.mouseButton.button == sf::Mouse::Left){
                     sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y); // получаем положение курсора
-                    if (nextModeBtnShape.getGlobalBounds().contains(mousePos)){
+                    if (nextModeBtnShape.getGlobalBounds().contains(mousePos)){ // если нажали на кнопку далее переходи в след режим
                         currentMode = Game;
                         continue;
                     }
-                    if (cellIsSelected){
-                        choosedFigurePos = handleCreatePuzzleEvents(mousePos,container,CELLSIZE);
+                    if (cellIsSelected){ // если клетка поля уже выбрана
+                        choosedFigurePos = handleCreatePuzzleEvents(mousePos,container,CELLSIZE); // позиция фигуры в меню выбора от 0 до 11
                         if (choosedFigurePos != -1) {
-                            // Позиции: 0–5 — белые фигуры, 6–11 — черные
-                            std::vector<std::string> types = {"k", "q", "b", "n", "r", "p"};
-                            int typeIndex = choosedFigurePos % 6;
-                            bool isWhite = choosedFigurePos < 6;
-                            std::string figure = types[typeIndex] + (isWhite ? "w" : "b");
+                            std::vector<std::string> types = {"k", "q", "b", "n", "r", "p"}; // Позиции: 0–5 — белые фигуры, 6–11 — черные
+                            int typeIndex = choosedFigurePos % 6; // какая по счету фигура в строке (столбец)
+                            bool isWhite = choosedFigurePos < 6; // белые ли
+                            std::string figure = types[typeIndex] + (isWhite ? "w" : "b"); // создаем строку например qw q-queen w-white
 
-                            char typeChar = figure[0];  // 'k', 'q', 'b', 'n', 'r', 'p'
-                            char colorChar = figure[1]; // 'w' или 'b'
+                            char typeChar = figure[0];  // kqbnrp
+                            char colorChar = figure[1]; // wb (wildberries)
 
                             figure::teams team = (colorChar == 'w') ? figure::teams::WHITE : figure::teams::BLACK;
 
-                            if (typeChar == 'k')
+                            if (typeChar == 'k') // ставим нужную фигуру на нужное место 
                                 board->setFigure(selectedCell.first, selectedCell.second, std::make_unique<king>(team, selectedCell, textures[figure]));
                             else if (typeChar == 'q')
                                 board->setFigure(selectedCell.first, selectedCell.second, std::make_unique<queen>(team, selectedCell, textures[figure]));
@@ -896,16 +895,16 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                             else if (typeChar == 'p')
                                 board->setFigure(selectedCell.first, selectedCell.second, std::make_unique<pawn>(team, selectedCell, textures[figure]));
 
-                            selectedCell = std::make_pair(-1,-1);
+                            selectedCell = std::make_pair(-1,-1); // обнуляем выбранную ячейку
                             cellIsSelected = false;
                             continue;
                         }
                     }
                     
-                    for (int x = 0; x<8; x++){
-                        for (int y = 0; y<8; y++){
+                    for (int x = 0; x<8; x++){ // если кликнули не по менб выбора то мб кликнули по клетке
+                        for (int y = 0; y<8; y++){// по всем клеткам проходимся
                             if (boardRectangles[x][y].getGlobalBounds().contains(mousePos)){
-                                selectedCell=std::make_pair(x,7-y);
+                                selectedCell=std::make_pair(x,7-y); // ставим выбранную клетку
                                 cellIsSelected = true;
                                 choosedCellRect.setPosition(
                                 OFFSETX + selectedCell.first * CELLSIZE,
@@ -927,7 +926,7 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                 drawChooseFigureMenuCreatePuzzle(window,container,figureSpritesToChoose,rectanglesToChoose);
             }
         }
-        else if(currentMode == Game){
+        else if(currentMode == Game){ // если второй режим там где ходить надо
             sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
             while (window.pollEvent(event)) { // получаем постоянно событие какое то
                 handleWindowClose(window, event); // чтобы закрывалось окно
@@ -960,7 +959,7 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                             isFigureSelected = false; // фигура не выбрана
                             selectedFigure = nullptr; 
                             possibleMoves.clear(); // возможных ходов нет
-                            //TODO сохраняем новую позицию
+                            //TODO сохраняем начальную и  новую позицию
                         } else { // если движение не произошло тоесть клик был не по клетке а по фигуре или вообще вне поля
                             updateSelectionOnMissClick( // проверяем все фигуры вдруг по ним кликнули
                                 mousePos, board,
@@ -995,7 +994,7 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                 drawChoiceMenu(window, to_choose, rectangles_to_choose);
             }
             
-            drawNextModeButton(window,nextModeBtnShape,font,CELLSIZE,OFFSETX,OFFSETY);
+            drawNextModeButton(window,nextModeBtnShape,font,CELLSIZE,OFFSETX,OFFSETY); // отрисовываем кнопку перехода к след режиму
         }
         window.display(); // показывалось окно чтобы
     }

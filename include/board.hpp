@@ -36,7 +36,7 @@ public:
     void updateFen(); //функция для обновления фен позиции
     bool exportToFile(const std::string& filename, int players, int mode); // функция для создания сохранения
     bool importFromFile(const std::string& filename,  std::map<std::string, sf::Texture>& textures); //для загрузки
-    void clear(); // отчистить доску от фигур
+    void clear(); // очистить доску от фигур
 
 
 

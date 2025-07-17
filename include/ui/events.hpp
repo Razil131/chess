@@ -78,6 +78,7 @@ void updateSelectionOnMissClick(
     std::vector<std::pair<int, int>>& possibleMoves
 );
 
+// обработать ивенты в меню создания задач
 int handleCreatePuzzleEvents(const sf::Vector2f& mousePos,
     const sf::RectangleShape& container,
     int cellSize);
