@@ -221,3 +221,30 @@ void updateSelectionOnMissClick(
         if (found) break;  // выход из внешнего цикла
     }
 }
+
+int handleCreatePuzzleEvents(const sf::Vector2f& mousePos,
+    const sf::RectangleShape& container,
+    int cellSize)
+{   
+    const float padding = 5.f;
+    const float scaleFactor = 1.f / 2.f; // В 5 раз меньше
+    // Проверяем, попал ли клик в контейнер меню
+    if (!container.getGlobalBounds().contains(mousePos)) return -1;
+
+    // Вычисляем размер и шаг иконки (должны совпадать с createChooseFigureMenuCreatePuzzle)
+    float iconSize = cellSize * scaleFactor;
+    float stepX = iconSize + padding;
+    float stepY = iconSize + padding;
+
+    // Локальные координаты клика внутри контейнера
+    float localX = mousePos.x - container.getPosition().x - padding;
+    float localY = mousePos.y - container.getPosition().y - padding;
+
+    int col = static_cast<int>(localX / stepX);
+    int row = static_cast<int>(localY / stepY);
+
+    if (col < 0 || row < 0 || col >= 6 || row >= 2)
+        return -1;
+
+    return row * 6 + col; // индекс фигуры 0..11
+}

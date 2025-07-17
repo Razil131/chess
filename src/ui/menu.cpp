@@ -211,6 +211,7 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
     int dif = 1; //TODO потом switch case сделать чтобы выбирать сложность
     figure::teams userTeam = figure::WHITE; 
     bool needToQuitMenuFlag = false;
+    bool createFlag = false; // флаг для входа в режим создания
 
     auto saves = getSaveFilesWithoutDotFen(); 
     float scrollOffset = 0.f; // где начало скрола
@@ -278,6 +279,9 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
                 if (backBtn.getGlobalBounds().contains(mousePos)){ 
                     clickedButtonID = "back";
                 }
+                else if (createPuzzleBtn.getGlobalBounds().contains(mousePos)){
+                    clickedButtonID = "create";
+                }
                 else{
                     for (auto& [id, rect] : menuButtonsRects) { // по всему списку кнопок проходимся
                         if (rect.getGlobalBounds().contains(mousePos)){
@@ -329,6 +333,11 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
                 needToQuitMenuFlag = true;
                 break;
             }
+            else if (clickedButtonID == "create"){
+                createFlag = true;
+                needToQuitMenuFlag = true;
+                break;
+            }
             else if (clickedButtonID == "back"){
                 if (currentMode == ModeChoose)
                     currentMode = MainMenu;
@@ -347,7 +356,9 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
         if (needToQuitMenuFlag)
             break;
     }
-    if (player == 1 and mode == 1) // запускаем функцию подходящию под выбранные настройки
+    if (createFlag)  // запускаем функцию подходящию под выбранные настройки
+        createPuzzle(window,font);
+    else if (player == 1 and mode == 1)
         vsComputerStandart(window,font,userTeam);
     else if (player == 1 and mode == 2)
         vsComputerFisher(window,font, userTeam);

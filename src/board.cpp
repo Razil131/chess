@@ -788,3 +788,11 @@ bool Board::importFromFile(const std::string& filename,  std::map<std::string, s
     return true;
 
 }
+
+void Board::clear(){
+    for(int y = 0; y < 8; ++y){
+        for(int x = 0; x < 8; ++x){ //очищаем доску 
+            removeFigure(x, y);
+        }
+    }
+}

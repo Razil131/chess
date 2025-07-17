@@ -77,3 +77,7 @@ void updateSelectionOnMissClick(
     figure*& selectedFigure,
     std::vector<std::pair<int, int>>& possibleMoves
 );
+
+int handleCreatePuzzleEvents(const sf::Vector2f& mousePos,
+    const sf::RectangleShape& container,
+    int cellSize);

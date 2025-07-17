@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "figure.hpp"
+#include "create_puzzle.hpp"
 #include "textures.hpp"
 #include "board.hpp"
 #include "ui_board.hpp"
@@ -24,3 +25,5 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams use
 void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font, std::string savefile = "");
 
 void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam = figure::WHITE, std::string savefile = "");
+
+void createPuzzle(sf::RenderWindow& window,sf::Font& font);

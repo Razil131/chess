@@ -803,3 +803,202 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams use
     engine.stop();
 }
 // TODO разбить этот код на функции а то чет слишком много повторов
+
+
+void createPuzzle(sf::RenderWindow& window,sf::Font& font){
+    const float CELLSIZE = 100.f; // размер клетки
+    const float OFFSETX = 50.f; // отстпуп для букв слева
+    const float OFFSETY = 50.f; // отступ для цифр снизу
+    
+    enum createPuzzleModes {Setup,Game};
+
+    createPuzzleModes currentMode = Setup;
+
+    //буквы
+    sf::Text letters[8];
+    createLetters(letters, font, CELLSIZE, OFFSETX, OFFSETY);
+
+    //цифры
+    sf::Text numbers[8];
+    createNumbers(numbers, font, CELLSIZE, OFFSETY);
+
+    std::map<std::string, sf::Texture> textures; // мапа текстур
+    loadTextures(textures);
+    Board* board = new Board();  // создание твоей доски (❁´◡`❁)
+    board->clear();
+
+    std::pair<int,int> selectedCell = std::make_pair(-1,-1);
+    bool cellIsSelected = false; 
+    int choosedFigurePos;
+
+    std::vector<sf::Sprite> figureSpritesToChoose; // спрайты фигур в меню выбора
+    std::vector<sf::RectangleShape> rectanglesToChoose; // прямоугольники на заднем плане в меню выбора
+    sf::RectangleShape container; 
+
+    sf::RectangleShape nextModeBtnShape;
+
+    sf::RectangleShape choosedCellRect(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик отображающий клетку выбраную
+    choosedCellRect.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
+  
+    bool isFigureSelected = false; // фигура сейчас выбрана для хода
+    figure* selectedFigure = nullptr; 
+    std::vector<std::pair<int, int>> possibleMoves; // возможные ходы для выбранной фигуры
+
+    std::vector<sf::Sprite> to_choose; // спрайты фигур в меню выбора
+    std::vector<sf::RectangleShape> rectangles_to_choose; // прямоугольники на заднем плане в меню выбора
+
+    sf::RectangleShape lastMoveFrom(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик откуда последний ход
+    sf::RectangleShape lastMoveTo(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик куда последний ход
+    lastMoveFrom.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
+    lastMoveTo.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
+    bool hasMoved = false; // флаг был ли уже ход а то при запуске когда хода не было сделано эти квадраты просто на угол уезжали и закрывали часть окна
+
+    // создаем доску
+    sf::RectangleShape boardRectangles[8][8];
+    initializeBoardRectangles(boardRectangles, CELLSIZE, OFFSETX, OFFSETY);
+    while (window.isOpen()){
+        window.clear(sf::Color(128,128,128));
+        sf::Event event;
+        if (currentMode == Setup){
+            while (window.pollEvent(event)) {
+                handleWindowClose(window,event);
+                if (event.type == sf::Event::MouseButtonPressed && // нажатие левой кнопки мыши
+                event.mouseButton.button == sf::Mouse::Left){
+                    sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y); // получаем положение курсора
+                    if (nextModeBtnShape.getGlobalBounds().contains(mousePos)){
+                        currentMode = Game;
+                        continue;
+                    }
+                    if (cellIsSelected){
+                        choosedFigurePos = handleCreatePuzzleEvents(mousePos,container,CELLSIZE);
+                        if (choosedFigurePos != -1) {
+                            // Позиции: 0–5 — белые фигуры, 6–11 — черные
+                            std::vector<std::string> types = {"k", "q", "b", "n", "r", "p"};
+                            int typeIndex = choosedFigurePos % 6;
+                            bool isWhite = choosedFigurePos < 6;
+                            std::string figure = types[typeIndex] + (isWhite ? "w" : "b");
+
+                            char typeChar = figure[0];  // 'k', 'q', 'b', 'n', 'r', 'p'
+                            char colorChar = figure[1]; // 'w' или 'b'
+
+                            figure::teams team = (colorChar == 'w') ? figure::teams::WHITE : figure::teams::BLACK;
+
+                            if (typeChar == 'k')
+                                board->setFigure(selectedCell.first, selectedCell.second, std::make_unique<king>(team, selectedCell, textures[figure]));
+                            else if (typeChar == 'q')
+                                board->setFigure(selectedCell.first, selectedCell.second, std::make_unique<queen>(team, selectedCell, textures[figure]));
+                            else if (typeChar == 'b')
+                                board->setFigure(selectedCell.first, selectedCell.second, std::make_unique<bishop>(team, selectedCell, textures[figure]));
+                            else if (typeChar == 'n')
+                                board->setFigure(selectedCell.first, selectedCell.second, std::make_unique<knight>(team, selectedCell, textures[figure]));
+                            else if (typeChar == 'r')
+                                board->setFigure(selectedCell.first, selectedCell.second, std::make_unique<rook>(team, selectedCell, textures[figure]));
+                            else if (typeChar == 'p')
+                                board->setFigure(selectedCell.first, selectedCell.second, std::make_unique<pawn>(team, selectedCell, textures[figure]));
+
+                            selectedCell = std::make_pair(-1,-1);
+                            cellIsSelected = false;
+                            continue;
+                        }
+                    }
+                    
+                    for (int x = 0; x<8; x++){
+                        for (int y = 0; y<8; y++){
+                            if (boardRectangles[x][y].getGlobalBounds().contains(mousePos)){
+                                selectedCell=std::make_pair(x,7-y);
+                                cellIsSelected = true;
+                                choosedCellRect.setPosition(
+                                OFFSETX + selectedCell.first * CELLSIZE,
+                                OFFSETY + (7 - selectedCell.second) * CELLSIZE);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            drawBoardAndLabels(window,boardRectangles,letters,numbers);
+            if (cellIsSelected)
+                window.draw(choosedCellRect);
+            drawNextModeButton(window,nextModeBtnShape,font,CELLSIZE,OFFSETX,OFFSETY);
+            drawFigures(window,board,CELLSIZE,OFFSETX,OFFSETY);
+            if (selectedCell.first!=-1 and selectedCell.second!=-1){
+                createChooseFigureMenuCreatePuzzle(window,textures,selectedCell,CELLSIZE,OFFSETX,OFFSETY,container,figureSpritesToChoose,rectanglesToChoose);
+                drawChooseFigureMenuCreatePuzzle(window,container,figureSpritesToChoose,rectanglesToChoose);
+            }
+        }
+        else if(currentMode == Game){
+            sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
+            while (window.pollEvent(event)) { // получаем постоянно событие какое то
+                handleWindowClose(window, event); // чтобы закрывалось окно
+                if (event.type == sf::Event::MouseButtonPressed && // нажатие левой кнопки мыши
+                    event.mouseButton.button == sf::Mouse::Left) {
+                    sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y); // получаем положение курсора
+                    // если пешка на клетке для превращения
+                    if (nextModeBtnShape.getGlobalBounds().contains(mousePos)){
+                        delete board;
+                        createMainMenu(window,font);
+                    }
+                    if (board->convertFlag){
+                        selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE); // выбираем и превращаем
+                        return;
+                    }
+                    if (!isFigureSelected) { // если фигура еще не выбрана
+                        selectFigure(mousePos, board, // пытаемся выбрать фигуру по всем фигурам проходимся и смотрим (убрано в отдельную функцию)
+                                    isFigureSelected, selectedFigure,
+                                    possibleMoves);
+                    } else { // если уже была выбрана фигура ранее
+                        bool moved = applyMoveIfValid(  // двигаем фигуру на клетку на которую щелкнули передвигаем квадраты показывающие последний ход
+                            mousePos, board,
+                            selectedFigure, possibleMoves,
+                            lastMoveFrom, lastMoveTo,
+                            hasMoved, OFFSETX,
+                            OFFSETY, CELLSIZE
+                        );
+
+                        if (moved) { // если походили тоесть applyMoveifValid вернуло true
+                            isFigureSelected = false; // фигура не выбрана
+                            selectedFigure = nullptr; 
+                            possibleMoves.clear(); // возможных ходов нет
+                            //TODO сохраняем новую позицию
+                        } else { // если движение не произошло тоесть клик был не по клетке а по фигуре или вообще вне поля
+                            updateSelectionOnMissClick( // проверяем все фигуры вдруг по ним кликнули
+                                mousePos, board,
+                                selectedFigure, possibleMoves
+                            );
+                        }
+                    }
+                }
+            }
+
+            window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
+
+            drawBoardAndLabels(window, boardRectangles, letters, numbers); // рисуем доску и цифры буквы
+            if (hasMoved) { // если ход был рисуем зеленые квадраты на последнем ходу
+                window.draw(lastMoveFrom);
+                window.draw(lastMoveTo);
+            }
+            if (board->isKingInCheck(figure::BLACK)){ // если какому нибудь королю стоит шах нарисовать красный квадрат на нем
+                drawCheck(window,board,figure::BLACK,OFFSETX,OFFSETY,CELLSIZE);
+            }else if(board->isKingInCheck(figure::WHITE)){
+                drawCheck(window,board,figure::WHITE,OFFSETX,OFFSETY,CELLSIZE);
+            }
+
+            drawFigures(window, board, CELLSIZE, OFFSETX, OFFSETY); // рисуем фигуры
+
+            if (isFigureSelected) { // если фигура выбрана
+                drawMoveHighlights(window, possibleMoves, *board, selectedFigure, OFFSETX, OFFSETY, CELLSIZE); // рисуем возможные ходы
+            }
+
+            if (board->convertFlag){ // если пешка на клетке для превращения
+                createChoiceMenu(board, to_choose, rectangles_to_choose, textures, OFFSETX, OFFSETY, CELLSIZE); // создаем и отрисовываем меню выбора
+                drawChoiceMenu(window, to_choose, rectangles_to_choose);
+            }
+            
+            drawNextModeButton(window,nextModeBtnShape,font,CELLSIZE,OFFSETX,OFFSETY);
+        }
+        window.display(); // показывалось окно чтобы
+    }
+    delete board; // отчищаем память от твоей доски 😥😥😣😣😥
+}
+    
