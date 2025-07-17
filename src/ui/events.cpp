@@ -4,6 +4,8 @@ void processEvents(
     sf::RenderWindow& window,
     sf::Font& font,
     Board* board,
+    int mode,
+    int players,
     bool& endGameScreen,
     sf::RectangleShape newGameButtonRect,
     bool& isFigureSelected,
@@ -23,7 +25,10 @@ void processEvents(
 ) {
     sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
     while (window.pollEvent(event)) { // получаем постоянно событие какое то
-        handleWindowClose(window, event); // чтобы закрывалось окно
+        if (endGameScreen) // чтобы не сохранялось если игра завершена
+            handleWindowClose(window, event); // чтобы закрывалось окно
+        else
+            handleWindowClose(window, event,board,players,mode);// чтобы закрывалось окно и сохранялась игра
         if (event.type == sf::Event::MouseButtonPressed && // нажатие левой кнопки мыши
             event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y); // получаем положение курсора
@@ -75,15 +80,16 @@ void processEvents(
 }
 
 // закрывает окно по крестику
-void handleWindowClose(sf::RenderWindow& window, const sf::Event& event, Board* board, int players, int mode, figure::teams color) {
+void handleWindowClose(sf::RenderWindow& window, const sf::Event& event, Board* board, int players, int mode) {
     if (event.type == sf::Event::Closed) {
         if (board){
-            board->exportToFile(getSaveFileName(mode,players,color)+".fen",players,mode);
+            board->exportToFile(getSaveFileName(mode,players)+".fen",players,mode);
         }
         window.close();
     }
 }
 
+// обработка колеса и нажатия в  SaveMenu
 std::string handleSaveMenuEvents(sf::RenderWindow& win,
                                  sf::Event& event,
                                  std::map<std::string, sf::RectangleShape>& btns,
@@ -94,25 +100,25 @@ std::string handleSaveMenuEvents(sf::RenderWindow& win,
                                  float scrollSpeed)
 {
 
-    if (event.type == sf::Event::MouseWheelScrolled &&
+    if (event.type == sf::Event::MouseWheelScrolled && // если колесико крутят
         event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel)
     {
-        scrollOffset -= event.mouseWheelScroll.delta * scrollSpeed;
-        scrollOffset = scrollOffset > 0 ? scrollOffset : 0;
+        scrollOffset -= event.mouseWheelScroll.delta * scrollSpeed; // скрол вниз или вверх меняем
+        scrollOffset = scrollOffset > 0 ? scrollOffset : 0; // чтобы скрол был неотрицательным
 
-        float totalHeight = savesCount * buttonHeight + (savesCount - 1) * gap;
-        float viewHeight  = static_cast<float>(win.getSize().y);
-        float maxOffset   = std::max(0.f, totalHeight - viewHeight);
+        float totalHeight = savesCount * buttonHeight + (savesCount - 1) * gap; // получаем сколько вообще занимают кнопки по высоте
+        float viewHeight  = static_cast<float>(win.getSize().y); // видимый Y у нас 900px
+        float maxOffset   = std::max(0.f, totalHeight - viewHeight); // максимальная глубина прокрута
 
-        scrollOffset = std::clamp(scrollOffset, (float)(0), maxOffset);
-    }
-    else if (event.type == sf::Event::MouseButtonPressed &&
+        scrollOffset = std::clamp(scrollOffset, static_cast<float>(0), maxOffset); // и кламп так называемый чтобы scrolloffset был между 0 и maxOffset
+    } // по сохранению нажимают
+    else if (event.type == sf::Event::MouseButtonPressed && // е
              event.mouseButton.button == sf::Mouse::Left)
     {
         sf::Vector2f mp(event.mouseButton.x, event.mouseButton.y);
         for (auto& [key, btn] : btns) {
             if (btn.getGlobalBounds().contains(mp))
-                return key;
+                return key;// возвращаем сохранение по которому нажали
         }
     }
 

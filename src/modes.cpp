@@ -1,6 +1,6 @@
 #include "modes.hpp"
 
-void vsPlayerStandart(sf::RenderWindow& window,sf::Font& font){    // отдельная функция для игры против игрока
+void vsPlayerStandart(sf::RenderWindow& window,sf::Font& font, std::string savefile){    // отдельная функция для игры против игрока
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -16,7 +16,10 @@ void vsPlayerStandart(sf::RenderWindow& window,sf::Font& font){    // отдел
     std::map<std::string, sf::Texture> textures; // мапа текстур
     loadTextures(textures);
     Board* board = new Board();  // создание твоей доски (❁´◡`❁)
-    board->initialize(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+    if (savefile.empty())
+        board->initialize(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+    else
+        board->importFromFile(savefile,textures);
 
     bool isFigureSelected = false; // фигура сейчас выбрана для хода
     figure* selectedFigure = nullptr; 
@@ -38,8 +41,8 @@ void vsPlayerStandart(sf::RenderWindow& window,sf::Font& font){    // отдел
     sf::RectangleShape boardRectangles[8][8];
     initializeBoardRectangles(boardRectangles, CELLSIZE, OFFSETX, OFFSETY);
 
-    while (window.isOpen()){
-        processEvents(window, font, board, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
+    while (window.isOpen()){//             мод человек сколько и команда
+        processEvents(window, font, board, 1, 2, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
 
         window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
 
@@ -81,7 +84,7 @@ void vsPlayerStandart(sf::RenderWindow& window,sf::Font& font){    // отдел
     delete board; // отчищаем память от твоей доски 😥😥😣😣😥
 }
 
-void vsPlayerFisher(sf::RenderWindow& window,sf::Font& font){    // отдельная функция для игры против игрока
+void vsPlayerFisher(sf::RenderWindow& window,sf::Font& font, std::string savefile){    // отдельная функция для игры против игрока
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -97,7 +100,10 @@ void vsPlayerFisher(sf::RenderWindow& window,sf::Font& font){    // отдель
     std::map<std::string, sf::Texture> textures; // мапа текстур
     loadTextures(textures);
     Board* board = new Board();  // создание твоей доски (❁´◡`❁)
-    board->fisherPos(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+    if (savefile.empty())
+        board->fisherPos(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+    else
+        board->importFromFile(savefile,textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
 
     bool isFigureSelected = false; // фигура сейчас выбрана для хода
     figure* selectedFigure = nullptr; 
@@ -124,7 +130,7 @@ void vsPlayerFisher(sf::RenderWindow& window,sf::Font& font){    // отдель
 
     while (window.isOpen()){
         bool handled = false;
-        processEvents(window, font, board, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE, &rightCastle, &leftCastle); // обрабатываем все возможные события клик мыши и тд
+        processEvents(window, font, board, 2, 2, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE, &rightCastle, &leftCastle); // обрабатываем все возможные события клик мыши и тд
 
         window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
 
@@ -166,7 +172,7 @@ void vsPlayerFisher(sf::RenderWindow& window,sf::Font& font){    // отдель
     delete board; // отчищаем память от твоей доски 😥😥😣😣😥
 }
 
-void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam){// отдельная функция для игры против компьютера
+void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam, std::string savefile){// отдельная функция для игры против компьютера
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -182,7 +188,10 @@ void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams u
     std::map<std::string, sf::Texture> textures; // мапа текстур
     loadTextures(textures);
     Board* board = new Board();  // создание твоей доски (❁´◡`❁)
-    board->initialize(textures);
+    if (savefile.empty())
+        board->initialize(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+    else
+        board->importFromFile(savefile,textures);
 
     bool isFigureSelected = false; // фигура сейчас выбрана для хода
     figure* selectedFigure = nullptr; 
@@ -291,7 +300,7 @@ void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams u
                 board->convertFlag = false;
             }
         }
-        processEvents(window, font, board, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
+        processEvents(window, font, board, 1, 1, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
 
         
 
@@ -339,7 +348,7 @@ void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams u
     engine.stop();
 }
 
-void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam){// отдельная функция для игры против компьютера
+void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam, std::string savefile){// отдельная функция для игры против компьютера
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -355,7 +364,10 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams use
     std::map<std::string, sf::Texture> textures; // мапа текстур
     loadTextures(textures);
     Board* board = new Board();  // создание твоей доски (❁´◡`❁)
-    board->fisherPos(textures);
+    if (savefile.empty())
+        board->fisherPos(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+    else
+        board->importFromFile(savefile,textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
 
     bool isFigureSelected = false; // фигура сейчас выбрана для хода
     figure* selectedFigure = nullptr; 
@@ -395,7 +407,7 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams use
 
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
         
-        processEvents(window, font, board, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE, &rightCastle, &leftCastle); // обрабатываем все возможные события клик мыши и тд
+        processEvents(window, font, board, 2, 1, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE, &rightCastle, &leftCastle); // обрабатываем все возможные события клик мыши и тд
 
         if (board->getCurrentTeam() != userTeam) {
         // 1.2) Формируем строку всех предыдущих ходов
@@ -501,7 +513,7 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams use
     engine.stop();
 }
 
-void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font){    // отдельная функция для игры против игрока
+void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font, std::string savefile){    // отдельная функция для игры против игрока
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -523,7 +535,10 @@ void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font){    // отдель
     bool blackWasInCheck = false;
 
     Board* board = new Board();  // создание твоей доски (❁´◡`❁)
-    board->initialize(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+    if (savefile.empty())
+        board->initialize(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+    else
+        board->importFromFile(savefile,textures);
 
     bool isFigureSelected = false; // фигура сейчас выбрана для хода
     figure* selectedFigure = nullptr; 
@@ -546,7 +561,7 @@ void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font){    // отдель
     initializeBoardRectangles(boardRectangles, CELLSIZE, OFFSETX, OFFSETY);
 
     while (window.isOpen()){
-        processEvents(window, font, board, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
+        processEvents(window, font, board, 3, 2, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
 
         window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
 
@@ -598,7 +613,7 @@ void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font){    // отдель
     delete board; // отчищаем память от твоей доски 😥😥😣😣😥
 }
 
-void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam){// отдельная функция для игры против компьютера
+void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam, std::string savefile){// отдельная функция для игры против компьютера
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -619,7 +634,10 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams use
     std::map<std::string, sf::Texture> textures; // мапа текстур
     loadTextures(textures);
     Board* board = new Board();  // создание твоей доски (❁´◡`❁)
-    board->initialize(textures);
+    if (savefile.empty())
+        board->initialize(textures); // расставление фигур на твоей доске (╯°□°）╯︵ ┻━┻
+    else
+        board->importFromFile(savefile,textures);
 
     bool isFigureSelected = false; // фигура сейчас выбрана для хода
     figure* selectedFigure = nullptr; 
@@ -728,7 +746,7 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams use
                 board->convertFlag = false;
             }
         }
-        processEvents(window, font, board, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
+        processEvents(window, font, board, 3, 1, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
 
         
 

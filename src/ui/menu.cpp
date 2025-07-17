@@ -74,7 +74,7 @@ void drawSaveMenu(sf::RenderWindow& win,
     sf::Vector2f center{win.getSize()};
     center *= 0.5f;
 
-
+    //TODO сделать кнопки удалить сохранение на каждом сохранении
     float startY = 10.f + H/2 - scrollOffset; // начало кнопок по y
 
     float centerX = win.getSize().x * 0.5f; // горизонтальный центр
@@ -212,7 +212,7 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
     figure::teams userTeam = figure::WHITE; 
     bool needToQuitMenuFlag = false;
 
-    auto saves = getSaveFiles(); 
+    auto saves = getSaveFilesWithoutDotFen(); 
     float scrollOffset = 0.f; // где начало скрола
     const float SAVEMENU_BTN_H = 40.f; // высота кнопок в savemenu
     const float SAVEMENU_GAP   = 10.f; // расстояние между кнопками в savemenu
@@ -230,7 +230,7 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
             drawMainMenu(window,menuButtonsRects,font);
         }
         else if (currentMode == Continue){
-            drawSaveMenu(window,menuButtonsRects,backBtn,font,getSaveFiles(),scrollOffset);
+            drawSaveMenu(window,menuButtonsRects,backBtn,font,saves,scrollOffset);
         }
         else if (currentMode == ModeChoose){
             drawGameTypeMenu(window,menuButtonsRects,backBtn,font);
@@ -250,9 +250,26 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
             handleWindowClose(window, event); // чтобы закрывалось окно TODO чтобы делало сейвы
             clickedButtonID = ""; // обнуляем кнопку а то back может несколько раз нажаться при однократном нажатии
             if (currentMode == Continue){ // 
-                std::string clickedSave = handleSaveMenuEvents(window, event, menuButtonsRects, scrollOffset, saves.size(),SAVEMENU_BTN_H, SAVEMENU_GAP);
-                if (!clickedSave.empty()) {
-                    // TODO сделать вход в сейв
+                std::string clickedSave = handleSaveMenuEvents(window, event, menuButtonsRects, scrollOffset, saves.size(), SAVEMENU_BTN_H, SAVEMENU_GAP);
+                if (!clickedSave.empty()) { // если нажата кнопка сохранения
+                    size_t underscorePos = clickedSave.find('_'); // из названия файла получаем режим и противника
+                    size_t secondUnderscorePos = clickedSave.find('_', underscorePos + 1);
+                    size_t dotPos = clickedSave.find('.', underscorePos);
+                    std::string mode = clickedSave.substr(underscorePos + 1, secondUnderscorePos - underscorePos - 1);
+                    std::string opponent = clickedSave.substr(secondUnderscorePos + 1, dotPos - secondUnderscorePos - 1);
+                    clickedSave+=".fen";
+                    if (opponent == "vsComputer" and mode == "Classic") // запускаем функцию подходящию под выбранные настройки
+                        vsComputerStandart(window, font, userTeam, clickedSave);
+                    else if (opponent == "vsComputer" and mode == "Fisher")
+                        vsComputerFisher(window, font, userTeam, clickedSave);
+                    else if (opponent == "vsComputer" and mode == "3Check")
+                        vsComputer3Check(window, font,userTeam, clickedSave);
+                    else if (opponent == "vsPlayer" and mode == "Classic")
+                        vsPlayerStandart(window, font, clickedSave);
+                    else if (opponent == "vsPlayer" and mode == "Fisher")
+                        vsPlayerFisher(window, font, clickedSave);
+                    else if (opponent == "vsPlayer" and mode == "3Check")
+                        vsPlayer3Check(window, font, clickedSave);
                 }
             }
             if (event.type == sf::Event::MouseButtonPressed && // нажатие левой кнопки мыши

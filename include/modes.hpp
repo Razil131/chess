@@ -13,14 +13,14 @@
 #include "engine.hpp"
 
 
-void vsPlayerStandart(sf::RenderWindow& window,sf::Font& font);
+void vsPlayerStandart(sf::RenderWindow& window,sf::Font& font, std::string savefile = "");
 
-void vsPlayerFisher(sf::RenderWindow& window,sf::Font& font);
+void vsPlayerFisher(sf::RenderWindow& window,sf::Font& font, std::string savefile = "");
 
-void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam);
+void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam = figure::WHITE, std::string savefile = "");
 
-void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam);
+void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam = figure::WHITE, std::string savefile = "");
 
-void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font);
+void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font, std::string savefile = "");
 
-void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam);
+void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam = figure::WHITE, std::string savefile = "");

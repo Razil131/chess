@@ -35,7 +35,7 @@ public:
     bool fisherCastle(bool kingSide); //функция для рокировки фишера
     void updateFen(); //функция для обновления фен позиции
     bool exportToFile(const std::string& filename, int players, int mode); // функция для создания сохранения
-    bool importFromFile(const std::string& filename,  std::map<std::string, sf::Texture>& textures, int& players, int& mode); //для загрузки
+    bool importFromFile(const std::string& filename,  std::map<std::string, sf::Texture>& textures); //для загрузки
 
 
 

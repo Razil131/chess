@@ -711,11 +711,11 @@ bool Board::exportToFile(const std::string& filename, int players, int mode){ //
     return false;
 } 
 
-bool Board::importFromFile(const std::string& filename,  std::map<std::string, sf::Texture>& textures, int& players, int& mode){
-
+bool Board::importFromFile(const std::string& filename,  std::map<std::string, sf::Texture>& textures){ //FIXME боту передается стандартная расстановка а не расстановка из сохранения
+ 
     std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "saves"; //составляем путь до сейв папки
     std::filesystem::path fullpath = saveDir / filename;
-
+    int players,mode;
     std::ifstream in(fullpath);
     if(!in.is_open()) return false;
 
@@ -750,7 +750,7 @@ bool Board::importFromFile(const std::string& filename,  std::map<std::string, s
         else{
             figure::teams team = std::isupper(c) ? figure::WHITE : figure::BLACK;
             char lower = std::tolower(c);
-            std::string key = std::string(1, lower); + (team == figure::WHITE ? "w" : "b");
+            std::string key = std::string(1, lower) + (team == figure::WHITE ? "w" : "b"); // FIXED была точка с запятой посередине строки
             std::unique_ptr<figure> fig;
             switch(lower){
                 case 'p': fig = std::make_unique<pawn>(  team, std::pair{x,y}, textures[key]); break;

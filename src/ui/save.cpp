@@ -1,51 +1,57 @@
 #include "save.hpp"
 namespace fs = std::filesystem;
 
-std::string getSaveFileName(int mode, int player, figure::teams color) {
-    std::time_t now = std::time(nullptr);
+std::string getSaveFileName(int mode, int player) { 
+    std::time_t now = std::time(nullptr); //  получаем время
     char timeStr[20];
-    std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%d-%H-%M", std::localtime(&now));
+    std::strftime(timeStr, sizeof(timeStr), "%d-%m-%Y-%H-%M", std::localtime(&now)); // создаем строку день-месяц-год-час-минута
     
-    std::string variantStr = (mode == 1 ? "Classic" : (mode == 2 ? "Fisher" : "3Check"));
-    std::string opponentStr = player == 1 ? "Computer" : "Human";
-    std::string colorStr = color == figure::WHITE ? "White" : "Black";
+    std::string variantStr = (mode == 1 ? "Classic" : (mode == 2 ? "Fisher" : "3Check")); // создаем название
+    std::string opponentStr = player == 1 ? "vsComputer" : "vsPlayer";
     
-    return std::string(timeStr) + "_" + variantStr + "_" + opponentStr + "_" + colorStr;
+    return std::string(timeStr) + "_" + variantStr + "_" + opponentStr;
 }
 
 bool savesExists(){
 
-    fs::path saveDir = "../saves";
+    fs::path saveDir = "../saves"; // папка сохранений относительно 
 
-    // Проверка: существует ли папка
     if (!fs::exists(saveDir)) {
-        return false;
-        //"Папка не существует\n";
+        return false; // папка не существует
     }
 
-    // Проверка: это точно папка?
     if (!fs::is_directory(saveDir)) {
-        return false;
-        //"Это не папка\n";
+        return false; // это не папка
     }
 
-    // Проверка: есть ли в ней хотя бы один файл
     for (const auto& entry : fs::directory_iterator(saveDir)) {
         if (fs::is_regular_file(entry)) {
-            return true;
-            break;
+            return true; // в ней есть файл
         }
     }
+    return false;
 }
 
 std::vector<std::string> getSaveFiles(const std::string& folder) {
     std::vector<std::string> saves;
-    if (!savesExists())
+    if (!savesExists()) // если нету сохранений пустой вектор
         return saves;
-    for (auto& entry : fs::directory_iterator(folder)) {
-        if (entry.is_regular_file())
+    for (auto& entry : fs::directory_iterator(folder)) { 
+        if (entry.is_regular_file()) // записываем все файлы
             saves.push_back(entry.path().filename().string());
     }
-    std::sort(saves.begin(), saves.end());
+    std::sort(saves.begin(), saves.end()); // сортируем
+    return saves;
+}
+
+std::vector<std::string> getSaveFilesWithoutDotFen(const std::string& folder) {
+    std::vector<std::string> saves;
+    if (!savesExists()) // если нету сохранений пустой вектор
+        return saves;
+    for (auto& entry : fs::directory_iterator(folder)) { 
+        if (entry.is_regular_file()) // записываем все файлы
+            saves.push_back(entry.path().stem().string()); // stem()-просто название файла без расширения
+    }
+    std::sort(saves.begin(), saves.end()); // сортируем
     return saves;
 }
