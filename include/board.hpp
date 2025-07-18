@@ -37,6 +37,9 @@ public:
     bool exportToFile(const std::string& filename, int players, int mode); // функция для создания сохранения
     bool importFromFile(const std::string& filename,  std::map<std::string, sf::Texture>& textures); //для загрузки
     void clear(); // очистить доску от фигур
+    bool logFen(const std::string& filename) const; //функция будет записывать задачи логирывать
+    bool startRep(const std::string& filename, std::map<std::string, sf::Texture>& textures); //читать лог
+     bool processWhiteMove(); //вызывается после каждого хода белых для сверки позиции
 
 
 
@@ -59,10 +62,14 @@ public:
 
     std::vector<std::string> movesUCI; //будем тут хранить ходы в формате для движка
     std::string fenPos; //тут мы храним позицию для фишера вс компьютера
+    std::vector<std::string> fens; //будут строки храниться
+    size_t index = 0; // индекс
+    std::map<std::string, sf::Texture>* repTextures = nullptr; //текстуры
+
 
 
 private:
     std::vector<std::vector<std::unique_ptr<figure>>> board; //доска
     int moveCount;
-
+    bool loadPosFromFEN(const std::string& fen, std::map<std::string, sf::Texture>& textures);
 };

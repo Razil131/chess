@@ -230,7 +230,7 @@ void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams u
                 moves += move + " ";
             }
 
-            engine.sendCommand("position startpos moves " + moves); //отправляем позицию движку
+            engine.sendCommand(std::string("position fen ") + board->fenPos); //отправляем позицию движку
             engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
 
             std::string bestmove;//получаем лучший ход
@@ -676,7 +676,7 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams use
                 moves += move + " ";
             }
 
-            engine.sendCommand("position startpos moves " + moves); //отправляем позицию движку
+            engine.sendCommand(std::string("position fen ") + board->fenPos); //отправляем позицию движку
             engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
 
             std::string bestmove;//получаем лучший ход

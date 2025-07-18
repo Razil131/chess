@@ -796,3 +796,117 @@ void Board::clear(){
         }
     }
 }
+
+bool Board::logFen(const std::string& filename) const{ //TODO задачи записываем, если не нужна булевая функция, переделай ее в войд
+    const_cast<Board*>(this)->updateFen();
+    
+    std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "zadachi(potom_pereimenuesh)"; //составляем путь до сейв папки
+
+    std::filesystem::create_directories(saveDir);
+
+    std::filesystem::path fullpath = saveDir / filename;
+
+    std::ofstream out(fullpath, std::ios::app);
+
+    if (!out.is_open()) {
+            return false;
+        }
+
+    out << fenPos << "\n";
+    return true;
+}
+
+bool Board::loadPosFromFEN(const std::string& fen, std::map<std::string, sf::Texture>& textures){ //загружаем одну строку
+    std::istringstream ss(fen); //парсим поля
+    std::string placement, side, castling, ep, hmove, fmove;
+    if (!(ss >> placement >> side >> castling >> ep >> hmove >> fmove))
+        return false;
+
+    for(int y=0; y<8; ++y){
+        for(int x=0; x<8; ++x){
+            removeFigure(x,y);
+        }
+    }
+
+    //восстанавливаем фигуры из фен
+    int x = 0, y = 7;
+    for(char c : placement){
+        if(c == '/'){
+            --y; x = 0;
+        }
+        else if(std::isdigit(c)){
+            x += c - '0';
+        }
+        else{
+            figure::teams team = std::isupper(c) ? figure::WHITE : figure::BLACK;
+            char lower = std::tolower(c);
+            std::string key = std::string(1, lower) + (team == figure::WHITE ? "w" : "b"); // FIXED была точка с запятой посередине строки
+            std::unique_ptr<figure> fig;
+            switch(lower){
+                case 'p': fig = std::make_unique<pawn>(  team, std::pair{x,y}, textures[key]); break;
+                case 'n': fig = std::make_unique<knight>(team, std::pair{x,y}, textures[key]); break;
+                case 'b': fig = std::make_unique<bishop>(team, std::pair{x,y}, textures[key]); break;
+                case 'r': fig = std::make_unique<rook>(  team, std::pair{x,y}, textures[key]); break;
+                case 'q': fig = std::make_unique<queen>( team, std::pair{x,y}, textures[key]); break;
+                case 'k': fig = std::make_unique<king>(  team, std::pair{x,y}, textures[key]); break;
+                default:  break;
+            }
+            if(fig) setFigure(x, y, std::move(fig));
+            ++x;
+        }
+    }
+
+    bool whiteToMove = (side == "w"); //узнаем чья очередь ходить
+    int fm = std::stoi(fmove);
+    moveCount = whiteToMove ? (fm - 1)*2 : (fm - 1)*2 + 1;
+        
+    whiteCanCastleKingSide = (castling.find('K') != std::string::npos); //раздаем права на рокировку
+    whiteCanCastleQueenSide = (castling.find('Q') != std::string::npos);
+    blackCanCastleKingSide = (castling.find('k') != std::string::npos);
+    blackCanCastleQueenSide = (castling.find('q') != std::string::npos);
+    
+    //узнаем про взятие на проходе
+    if (ep != "-") {
+        enPassantFlag = true;
+        enPassantPosition = { ep[0] - 'a', ep[1] - '1' };
+    } else {
+        enPassantFlag = false;
+        enPassantPosition = {-1,-1};
+    }
+
+    updateFen();
+    return true;
+}
+
+bool Board::startRep(const std::string& filename, std::map<std::string, sf::Texture>& textures)
+{
+    std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "zadachi(potom_pereimenuesh)";
+    std::filesystem::path fullpath = saveDir / filename;
+    std::ifstream in(fullpath);
+    if (!in.is_open()) return false;
+
+    fens.clear(); //записываем в вектор тут
+    std::string line;
+    while (std::getline(in, line)) {
+        if (!line.empty())
+            fens.push_back(line);
+    }
+    if (fens.size() < 2) return false;
+
+    index = 0; //инициализируем
+    repTextures = &textures;
+    return loadPosFromFEN(fens[0], textures);
+}
+
+bool Board::processWhiteMove()//TODO эта функция тоже может быть не бул, или даже может быть не функцией, разбить ее можно. Она проверяет позицию щас и ту, которая в файле. Если все сходится, то он  сразу делает ход черными и возвращает ход белым
+{
+    if (index + 1 >= fens.size()) return false; //если вышли за пределы
+    updateFen();
+    if (fenPos != fens[index + 1]) { //сверяем
+        loadPosFromFEN(fens[index], *repTextures); //если не сошлось, откатываем
+        return false;
+    }
+    index += 2; // Если все сошлось в прошлой проверке, двигаем индекс и ставим уже то, что там после
+    loadPosFromFEN(fens[index], *repTextures);
+    return true;
+}
