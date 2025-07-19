@@ -39,7 +39,7 @@ public:
     void clear(); // очистить доску от фигур
     bool logFen(const std::string& filename) const; //функция будет записывать задачи логирывать
     bool startRep(const std::string& filename, std::map<std::string, sf::Texture>& textures); //читать лог
-     bool processWhiteMove(); //вызывается после каждого хода белых для сверки позиции
+    int processWhiteMove(); //вызывается после каждого хода белых для сверки позиции
 
 
 

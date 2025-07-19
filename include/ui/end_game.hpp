@@ -8,3 +8,8 @@ void drawEndGameScreen(sf::RenderWindow& window, //отрисовать меню
     figure::teams winner,
     const sf::Font& font,
     sf::RectangleShape& btnRect);
+
+void drawEndGameScreenPuzzle(sf::RenderWindow& window, //отрисовать меню завершения игры в пазлах
+    bool win,
+    const sf::Font& font,
+    sf::RectangleShape& btnRect);

@@ -711,7 +711,7 @@ bool Board::exportToFile(const std::string& filename, int players, int mode){ //
     return false;
 } 
 
-bool Board::importFromFile(const std::string& filename,  std::map<std::string, sf::Texture>& textures){ //FIXME боту передается стандартная расстановка а не расстановка из сохранения
+bool Board::importFromFile(const std::string& filename,  std::map<std::string, sf::Texture>& textures){
  
     std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "saves"; //составляем путь до сейв папки
     std::filesystem::path fullpath = saveDir / filename;
@@ -797,10 +797,10 @@ void Board::clear(){
     }
 }
 
-bool Board::logFen(const std::string& filename) const{ //TODO задачи записываем, если не нужна булевая функция, переделай ее в войд
+bool Board::logFen(const std::string& filename) const{ 
     const_cast<Board*>(this)->updateFen();
     
-    std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "zadachi(potom_pereimenuesh)"; //составляем путь до сейв папки
+    std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "puzzles"; //составляем путь до сейв папки
 
     std::filesystem::create_directories(saveDir);
 
@@ -880,7 +880,7 @@ bool Board::loadPosFromFEN(const std::string& fen, std::map<std::string, sf::Tex
 
 bool Board::startRep(const std::string& filename, std::map<std::string, sf::Texture>& textures)
 {
-    std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "zadachi(potom_pereimenuesh)";
+    std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "puzzles";
     std::filesystem::path fullpath = saveDir / filename;
     std::ifstream in(fullpath);
     if (!in.is_open()) return false;
@@ -898,15 +898,26 @@ bool Board::startRep(const std::string& filename, std::map<std::string, sf::Text
     return loadPosFromFEN(fens[0], textures);
 }
 
-bool Board::processWhiteMove()//TODO эта функция тоже может быть не бул, или даже может быть не функцией, разбить ее можно. Она проверяет позицию щас и ту, которая в файле. Если все сходится, то он  сразу делает ход черными и возвращает ход белым
-{
-    if (index + 1 >= fens.size()) return false; //если вышли за пределы
-    updateFen();
-    if (fenPos != fens[index + 1]) { //сверяем
-        loadPosFromFEN(fens[index], *repTextures); //если не сошлось, откатываем
-        return false;
+int Board::processWhiteMove()//Она проверяет позицию щас и ту, которая в файле. Если все сходится, то он  сразу делает ход черными и возвращает ход белым
+{ // return 0 — ход не сделан fen не совпал  return 1 — ход сделан успешно  return 2 — индекс вышел за границу
+    if (index + 1 < fens.size()) { // если следующий fen есть
+        updateFen();
+        if (fenPos != fens[index + 1]) { // если не совпадает
+            loadPosFromFEN(fens[index], *repTextures);  // откат
+            return 0;  // несовпадение
+        }
     }
-    index += 2; // Если все сошлось в прошлой проверке, двигаем индекс и ставим уже то, что там после
+    else { // следующего фена нет 
+        loadPosFromFEN(fens[index], *repTextures);
+        return 0;
+    }
+
+    index += 2;
+
+    if (index >= fens.size()) { // существует ли след ход белых
+        return 2;  // ходов нет - победа
+    }
+
     loadPosFromFEN(fens[index], *repTextures);
-    return true;
+    return 1;
 }

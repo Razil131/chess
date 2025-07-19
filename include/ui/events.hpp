@@ -67,7 +67,8 @@ bool applyMoveIfValid(
     bool& hasMoved,
     float OFFSETX,
     float OFFSETY,
-    float CELLSIZE
+    float CELLSIZE,
+    bool drawLastMove = true
 );
 
 // если клик сначало по фигуре а потом не по клетке

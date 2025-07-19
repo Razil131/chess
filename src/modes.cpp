@@ -814,6 +814,8 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
 
     createPuzzleModes currentMode = Setup;
 
+    std::string newPuzzleFileName = generatePuzzleFilename();
+
     //буквы
     sf::Text letters[8];
     createLetters(letters, font, CELLSIZE, OFFSETX, OFFSETY);
@@ -866,6 +868,7 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                 event.mouseButton.button == sf::Mouse::Left){
                     sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y); // получаем положение курсора
                     if (nextModeBtnShape.getGlobalBounds().contains(mousePos)){ // если нажали на кнопку далее переходи в след режим
+                        board->logFen(newPuzzleFileName);
                         currentMode = Game;
                         continue;
                     }
@@ -926,6 +929,7 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                 drawChooseFigureMenuCreatePuzzle(window,container,figureSpritesToChoose,rectanglesToChoose);
             }
         }
+        // TODO сделать чтобы что то как то изменялось и видно было что теперь не расставляем фигуры
         else if(currentMode == Game){ // если второй режим там где ходить надо
             sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
             while (window.pollEvent(event)) { // получаем постоянно событие какое то
@@ -940,7 +944,7 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                     }
                     if (board->convertFlag){
                         selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE); // выбираем и превращаем
-                        return;
+                        continue;
                     }
                     if (!isFigureSelected) { // если фигура еще не выбрана
                         selectFigure(mousePos, board, // пытаемся выбрать фигуру по всем фигурам проходимся и смотрим (убрано в отдельную функцию)
@@ -956,10 +960,10 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                         );
 
                         if (moved) { // если походили тоесть applyMoveifValid вернуло true
+                            board->logFen(newPuzzleFileName);
                             isFigureSelected = false; // фигура не выбрана
                             selectedFigure = nullptr; 
                             possibleMoves.clear(); // возможных ходов нет
-                            //TODO сохраняем начальную и  новую позицию
                         } else { // если движение не произошло тоесть клик был не по клетке а по фигуре или вообще вне поля
                             updateSelectionOnMissClick( // проверяем все фигуры вдруг по ним кликнули
                                 mousePos, board,
@@ -1001,3 +1005,130 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
     delete board; // отчищаем память от твоей доски 😥😥😣😣😥
 }
     
+
+
+void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuzzleNum){
+    const float CELLSIZE = 100.f; // размер клетки
+    const float OFFSETX = 50.f; // отстпуп для букв слева
+    const float OFFSETY = 50.f; // отступ для цифр снизу
+    
+    //буквы
+    sf::Text letters[8];
+    createLetters(letters, font, CELLSIZE, OFFSETX, OFFSETY);
+
+    //цифры
+    sf::Text numbers[8];
+    createNumbers(numbers, font, CELLSIZE, OFFSETY);
+
+    std::map<std::string, sf::Texture> textures; // мапа текстур
+    loadTextures(textures);
+    Board* board = new Board();  // создание твоей доски (❁´◡`❁)
+
+    board->startRep(makePuzzleFilename(solvingPuzzleNum),textures);
+
+    bool isFigureSelected = false; // фигура сейчас выбрана для хода
+    figure* selectedFigure = nullptr; 
+    std::vector<std::pair<int, int>> possibleMoves; // возможные ходы для выбранной фигуры
+
+    bool endGameScreen=false; // должен ли быть экран завершения игры?
+    bool win;
+    sf::RectangleShape newGameButtonRect; // прямоугольник для начала новой игры
+
+    std::vector<sf::Sprite> to_choose; // спрайты фигур в меню выбора
+    std::vector<sf::RectangleShape> rectangles_to_choose; // прямоугольники на заднем плане в меню выбора
+
+    sf::RectangleShape lastMoveFrom(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик откуда последний ход
+    sf::RectangleShape lastMoveTo(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик куда последний ход
+    lastMoveFrom.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
+    lastMoveTo.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
+    bool hasMoved = false; // флаг был ли уже ход а то при запуске когда хода не было сделано эти квадраты просто на угол уезжали и закрывали часть окна
+
+    // создаем доску
+    sf::RectangleShape boardRectangles[8][8];
+    initializeBoardRectangles(boardRectangles, CELLSIZE, OFFSETX, OFFSETY);
+
+    while (window.isOpen()){//             мод человек сколько и команда
+        sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
+        while (window.pollEvent(event)) { // получаем постоянно событие какое то
+            handleWindowClose(window, event); // чтобы закрывалось окно
+            if (event.type == sf::Event::MouseButtonPressed && // нажатие левой кнопки мыши
+                event.mouseButton.button == sf::Mouse::Left) {
+                sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y); // получаем положение курсора
+                if (endGameScreen){ // если игра закончилась проверяем нажата ли кнопка начать новую игру и начинаем ее
+                    if (newGameButtonRect.getGlobalBounds().contains(mousePos)){
+                        createMainMenu(window,font);
+                    }
+                    continue;
+                }
+                // если пешка на клетке для превращения
+                if (board->convertFlag){
+                    selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE); // выбираем и превращаем #FIXME меню выбора ломает все
+                    continue;
+                }
+                if (!isFigureSelected) { // если фигура еще не выбрана
+                    selectFigure(mousePos, board, // пытаемся выбрать фигуру по всем фигурам проходимся и смотрим (убрано в отдельную функцию)
+                                isFigureSelected, selectedFigure,
+                                possibleMoves);
+                } else { // если уже была выбрана фигура ранее
+                    bool moved = applyMoveIfValid(  // двигаем фигуру на клетку на которую щелкнули передвигаем квадраты показывающие последний ход
+                        mousePos, board,
+                        selectedFigure, possibleMoves,
+                        lastMoveFrom, lastMoveTo,
+                        hasMoved, OFFSETX,
+                        OFFSETY, CELLSIZE, false
+                    );
+
+                    if (moved) { // если походили тоесть applyMoveifValid вернуло true
+                        int result = board->processWhiteMove(); // проверяем ход
+                        if (result == 0) { // был не туда ход
+                            win = false; 
+                            endGameScreen = true;
+                        }
+                        else if (result == 2) { // ходы закончились
+                            win = true;
+                            endGameScreen = true;
+                        }
+                        isFigureSelected = false; // фигура не выбрана
+                        selectedFigure = nullptr; 
+                        possibleMoves.clear(); // возможных ходов нет
+                    } else { // если движение не произошло тоесть клик был не по клетке а по фигуре или вообще вне поля
+                        updateSelectionOnMissClick( // проверяем все фигуры вдруг по ним кликнули
+                            mousePos, board,
+                            selectedFigure, possibleMoves
+                        );
+                    }
+                }
+            }
+        }
+
+        window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
+
+        drawBoardAndLabels(window, boardRectangles, letters, numbers); // рисуем доску и цифры буквы
+        if (hasMoved) { // если ход был рисуем зеленые квадраты на последнем ходу
+            window.draw(lastMoveFrom);
+            window.draw(lastMoveTo);
+        }
+        if (board->isKingInCheck(figure::BLACK)){ // если какому нибудь королю стоит шах нарисовать красный квадрат на нем
+            drawCheck(window,board,figure::BLACK,OFFSETX,OFFSETY,CELLSIZE);
+        }else if(board->isKingInCheck(figure::WHITE)){
+            drawCheck(window,board,figure::WHITE,OFFSETX,OFFSETY,CELLSIZE);
+        }
+
+        drawFigures(window, board, CELLSIZE, OFFSETX, OFFSETY); // рисуем фигуры
+
+        if (isFigureSelected) { // если фигура выбрана
+            drawMoveHighlights(window, possibleMoves, *board, selectedFigure, OFFSETX, OFFSETY, CELLSIZE); // рисуем возможные ходы
+        }
+
+        if (board->convertFlag){ // если пешка на клетке для превращения
+            createChoiceMenu(board, to_choose, rectangles_to_choose, textures, OFFSETX, OFFSETY, CELLSIZE); // создаем и отрисовываем меню выбора
+            drawChoiceMenu(window, to_choose, rectangles_to_choose);
+        }
+
+        if (endGameScreen)
+            drawEndGameScreenPuzzle(window,win,font,newGameButtonRect);
+        
+        window.display(); // показывалось окно чтобы
+    }
+    delete board; // отчищаем память от твоей доски 😥😥😣😣😥
+}

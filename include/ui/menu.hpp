@@ -6,6 +6,7 @@
 #include "figure.hpp"
 #include "modes.hpp"
 #include "events.hpp"
+#include "puzzle.hpp"
 
 sf::RectangleShape makeButton(float w, float h, sf::Color fill, sf::Color outline);
 

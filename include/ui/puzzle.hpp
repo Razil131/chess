@@ -4,10 +4,12 @@
 #include <map>
 #include <iostream>
 #include <vector>
+#include <filesystem>
 #include "board.hpp"
 #include "menu.hpp"
 #include "figure.hpp"
 #include "modes.hpp"
+namespace fs = std::filesystem;
 
 // создать меню выбора фигуры для постановки ее на доску
 void createChooseFigureMenuCreatePuzzle(sf::RenderWindow& window,
@@ -27,3 +29,12 @@ void drawChooseFigureMenuCreatePuzzle(sf::RenderWindow& window,
     
 // отрисовать кнопку продолжения перехода в следующий режим
 void drawNextModeButton(sf::RenderWindow& window, sf::RectangleShape& nextModeBtnShape, sf::Font& font, int cellSize, int offsetX, int offsetY);
+
+// вернуть количество файлов в папке puzzles (задач)
+int countPuzzles(const std::string& folder = "../puzzles"); 
+
+// вернуть название нового пазла
+std::string generatePuzzleFilename(); 
+
+// вернуть название пазла по его номеру
+std::string makePuzzleFilename(std::string& numberStr); 
