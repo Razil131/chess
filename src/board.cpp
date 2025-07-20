@@ -898,6 +898,46 @@ bool Board::startRep(const std::string& filename, std::map<std::string, sf::Text
     return loadPosFromFEN(fens[0], textures);
 }
 
+
+static void parsePlacement(const std::string& placement, char out[8][8]) { //парсим положение фигур из фен строки
+    int x = 0, y = 7;
+    for (char c : placement) {
+        if (c == '/') {
+            --y; x = 0;
+        }
+        else if (std::isdigit(c)) {
+            x += c - '0';
+        }
+        else {
+            out[y][x++] = c;
+        }
+    }
+}
+
+static std::pair<std::pair<int,int>,std::pair<int,int>> diffFenMove(const std::string& fenA, const std::string& fenB) { //сравниваем и находим ход
+    auto pa = fenA.substr(0, fenA.find(' '));
+    auto pb = fenB.substr(0, fenB.find(' '));
+
+    char A[8][8] = {}, B[8][8] = {};
+    for(int i=0;i<8;i++) for(int j=0;j<8;j++){ A[i][j]=B[i][j]=' '; }
+    parsePlacement(pa, A);
+    parsePlacement(pb, B);
+
+    std::pair<int,int> from{-1,-1}, to{-1,-1};
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+            if (A[y][x] != B[y][x]) { //сравниваем положение в начальном и конечном варианте и находим диф
+                if (A[y][x] != ' ' && B[y][x] == ' ')
+                    from = {x,y};
+                else if (A[y][x] == ' ' && B[y][x] != ' ')
+                    to   = {x,y};
+            }
+        }
+    }
+    return {from,to};
+}
+
+
 bool Board::processWhiteMove()//TODO эта функция тоже может быть не бул, или даже может быть не функцией, разбить ее можно. Она проверяет позицию щас и ту, которая в файле. Если все сходится, то он  сразу делает ход черными и возвращает ход белым
 {
     if (index + 1 >= fens.size()) return false; //если вышли за пределы
@@ -906,7 +946,23 @@ bool Board::processWhiteMove()//TODO эта функция тоже может �
         loadPosFromFEN(fens[index], *repTextures); //если не сошлось, откатываем
         return false;
     }
+
+    const auto& fenBeforeBlack = fens[index + 1];
+    const auto& fenAfterBlack  = fens[index + 2];
+
+    auto coords = diffFenMove(fenBeforeBlack, fenAfterBlack); //вычисляем координаты
+    lastBlackFrom = coords.first;
+    lastBlackTo   = coords.second;
+
     index += 2; // Если все сошлось в прошлой проверке, двигаем индекс и ставим уже то, что там после
     loadPosFromFEN(fens[index], *repTextures);
     return true;
+}
+
+std::pair<int, int> Board::getLastBlackFrom() const {
+    return lastBlackFrom;
+}
+
+std::pair<int, int> Board::getLastBlackTo() const {
+    return lastBlackTo;
 }
