@@ -5,6 +5,9 @@
 #include "bishop.hpp"
 #include "queen.hpp"
 #include "king.hpp"
+#include <fstream>
+#include <sstream>
+#include <filesystem>
 #include <algorithm>
 #include <iostream>
 #include <random>
@@ -130,6 +133,8 @@ bool Board::isKingInCheck(figure::teams team) const {
 }
 
 void Board::initialize(std::map<std::string, sf::Texture>& textures){ //функция для начального положения фигур, по стандартной схеме
+    whiteCanCastleKingSide  = whiteCanCastleQueenSide  = blackCanCastleKingSide  = blackCanCastleQueenSide  = true;
+    updateFen();
     moveCount = 0; // чтобы при перезапуске игры игра не начиналась с хода черных
     for(int y = 0; y < 8; ++y){
         for(int x = 0; x < 8; ++x){ //очищаем доску 
@@ -141,27 +146,27 @@ void Board::initialize(std::map<std::string, sf::Texture>& textures){ //функ
         setFigure(x, 1, std::make_unique<pawn>(figure::teams::WHITE, std::make_pair(x, 1), textures["pw"])); //ставим белые пешки
         setFigure(x, 6, std::make_unique<pawn>(figure::teams::BLACK, std::make_pair(x, 6), textures["pb"])); //ставим черные пешки
     }
-    // //ставим ладьи на их места
-    // setFigure(0, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(0, 0), textures["rw"]));
-    // setFigure(7, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(7, 0), textures["rw"]));
-    // setFigure(0, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(0, 7), textures["rb"]));
-    // setFigure(7, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(7, 7), textures["rb"]));
+    //ставим ладьи на их места
+    setFigure(0, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(0, 0), textures["rw"]));
+    setFigure(7, 0, std::make_unique<rook>(figure::teams::WHITE, std::make_pair(7, 0), textures["rw"]));
+    setFigure(0, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(0, 7), textures["rb"]));
+    setFigure(7, 7, std::make_unique<rook>(figure::teams::BLACK, std::make_pair(7, 7), textures["rb"]));
 
-    // //ставим коней
-    // setFigure(1, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(1, 0), textures["nw"]));
-    // setFigure(6, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(6, 0), textures["nw"]));
-    // setFigure(1, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(1, 7), textures["nb"]));
-    // setFigure(6, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(6, 7), textures["nb"]));
+    //ставим коней
+    setFigure(1, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(1, 0), textures["nw"]));
+    setFigure(6, 0, std::make_unique<knight>(figure::teams::WHITE, std::make_pair(6, 0), textures["nw"]));
+    setFigure(1, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(1, 7), textures["nb"]));
+    setFigure(6, 7, std::make_unique<knight>(figure::teams::BLACK, std::make_pair(6, 7), textures["nb"]));
 
-    // //ставим слонов
-    // setFigure(2, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(2, 0), textures["bw"]));
-    // setFigure(5, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(5, 0), textures["bw"]));
-    // setFigure(2, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(2, 7), textures["bb"]));
-    // setFigure(5, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(5, 7), textures["bb"]));
+    //ставим слонов
+    setFigure(2, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(2, 0), textures["bw"]));
+    setFigure(5, 0, std::make_unique<bishop>(figure::teams::WHITE, std::make_pair(5, 0), textures["bw"]));
+    setFigure(2, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(2, 7), textures["bb"]));
+    setFigure(5, 7, std::make_unique<bishop>(figure::teams::BLACK, std::make_pair(5, 7), textures["bb"]));
 
-    // //ставим ферзей
-    // setFigure(3, 0, std::make_unique<queen>(figure::teams::WHITE, std::make_pair(3, 0), textures["qw"]));
-    // setFigure(3, 7, std::make_unique<queen>(figure::teams::BLACK, std::make_pair(3, 7), textures["qb"]));
+    //ставим ферзей
+    setFigure(3, 0, std::make_unique<queen>(figure::teams::WHITE, std::make_pair(3, 0), textures["qw"]));
+    setFigure(3, 7, std::make_unique<queen>(figure::teams::BLACK, std::make_pair(3, 7), textures["qb"]));
 
     //ставим королей
     setFigure(4, 0, std::make_unique<king>(figure::teams::WHITE, std::make_pair(4, 0), textures["kw"]));
@@ -226,6 +231,8 @@ void Board::fisherPos(std::map<std::string, sf::Texture>& textures){ //функ�
 
     int rookL = less.front();
     int rookR = greater.front();
+    whiteRookKS = blackRookKS = rookR;
+    whiteRookQS = blackRookQS = rookL;
 
     numbers.erase(std::find(numbers.begin(), numbers.end(), rookL));
     numbers.erase(std::find(numbers.begin(), numbers.end(), rookR));
@@ -267,6 +274,88 @@ void Board::fisherPos(std::map<std::string, sf::Texture>& textures){ //функ�
     // //ставим королей
     setFigure(res[2], 0, std::make_unique<king>(figure::teams::WHITE, std::make_pair(res[2], 0), textures["kw"]));
     setFigure(res[2], 7, std::make_unique<king>(figure::teams::BLACK, std::make_pair(res[2], 7), textures["kb"]));
+
+    //генерируем строку для позиции
+    std::ostringstream fenStream;
+    
+    for(int y = 7; y >= 0; --y){ //перебираем ряды
+        int emptycount = 0;
+        for(int x = 0; x < 8; ++x){
+            figure* fig = getFigure(x, y);
+            if(!fig){
+                ++emptycount;
+            } else{
+                if(emptycount){
+                    fenStream << emptycount;
+                    emptycount = 0;
+                }
+                char c;
+                switch (fig->getFigureType()){
+                    case figure::PAWN: c = 'P'; break;
+                    case figure::KNIGHT: c = 'N'; break;
+                    case figure::BISHOP: c = 'B'; break;
+                    case figure::ROOK: c = 'R'; break;
+                    case figure::QUEEN: c = 'Q'; break;
+                    case figure::KING: c = 'K'; break;
+                    default: c = '?'; break;
+                }
+                if(fig->getTeam() == figure::BLACK)
+                c = std::tolower(c);
+                fenStream << c;
+            }
+        }
+        if(emptycount) fenStream << emptycount;
+        if(y>0) fenStream << '/';
+    }
+    fenStream << " w KQkq - 0 1";
+    this-> fenPos = fenStream.str();
+}
+
+void Board::updateFen() { //функция для обновления фен позиции
+    std::ostringstream fen;
+    for(int y = 7; y >= 0; --y){ //записываем все в строчки
+        int empty = 0;
+        for(int x = 0; x < 8; ++x){
+            if (figure* f = getFigure(x, y)) {
+                if (empty) { fen << empty; empty = 0; }
+                char c;
+                switch (f->getFigureType()) {
+                    case figure::PAWN:   c = 'P'; break;
+                    case figure::KNIGHT: c = 'N'; break;
+                    case figure::BISHOP: c = 'B'; break;
+                    case figure::ROOK:   c = 'R'; break;
+                    case figure::QUEEN:  c = 'Q'; break;
+                    case figure::KING:   c = 'K'; break;
+                    default:             c = '?'; break;
+                }
+                fen << (f->getTeam()==figure::BLACK ? char(std::tolower(c)) : c);
+            } else {
+                ++empty;
+            }
+        }
+        if (empty) fen << empty;
+        if (y)     fen << '/';
+    }
+    fen << (getCurrentTeam()==figure::WHITE ? " w " : " b "); //определяем чей ход
+    std::string castling;
+    if (whiteCanCastleKingSide)   castling += 'K'; //заполняем рокировку
+    if (whiteCanCastleQueenSide)  castling += 'Q';
+    if (blackCanCastleKingSide)   castling += 'k';
+    if (blackCanCastleQueenSide)  castling += 'q';
+    if (castling.empty()) castling = "-";
+
+    fen << castling << ' ';
+
+    if (enPassantFlag) { //заполняем взятие на проходе
+        int ex = enPassantPosition.first;
+        int ey = enPassantPosition.second;
+        fen << char('a'+ex) << char('1'+ey) << ' ';
+    } else {
+        fen << "- ";
+    }
+    
+    fen << "0 " << (moveCount/2 + 1); //полупроходы и счётчик ходов можно просто обнулять или считать по moveCount хз надо это или нет но вроде это стандарт
+    this->fenPos = fen.str();
 }
 
 
@@ -359,6 +448,30 @@ bool Board::makeMove(std::pair<int, int> from, std::pair<int, int> to){
     uci.push_back(promo);
     }
     movesUCI.push_back(uci);
+
+    if (movingfig->getFigureType() == figure::KING) { //сбрасываем флаги рокировки
+    if (movingfig->getTeam() == figure::WHITE) {
+        whiteCanCastleKingSide  = false;
+        whiteCanCastleQueenSide = false;
+    } else {
+        blackCanCastleKingSide  = false;
+        blackCanCastleQueenSide = false;
+    }
+}
+
+    if (movingfig->getFigureType() == figure::ROOK) {
+    int fx = from.first;
+    int fy = from.second;
+    if (movingfig->getTeam() == figure::WHITE) {
+        if (fx == whiteRookKS && fy == 0) whiteCanCastleKingSide  = false;
+        if (fx == whiteRookQS && fy == 0) whiteCanCastleQueenSide = false;
+    } else {
+        if (fx == blackRookKS && fy == 7) blackCanCastleKingSide  = false;
+        if (fx == blackRookQS && fy == 7) blackCanCastleQueenSide = false;
+    }
+}
+
+    updateFen();
     return true; //ход сделан
     }
 
@@ -478,6 +591,8 @@ bool Board::isSquareAttack(std::pair<int, int> square, figure::teams team) const
     return false;
 }
 
+
+
 bool Board::fisherCastle(bool kingSide){ //функция для рокировки по фишеру
     figure::teams team = getCurrentTeam(); //получаем команду
     int gor = (team == figure::WHITE ? 0 : 7); //получаем горизонталь
@@ -536,12 +651,318 @@ bool Board::fisherCastle(bool kingSide){ //функция для рокиров�
 
     int rookToX = kingSide ? 5 : 3;
 
-    board[gor][kingToX] = std::move(board[gor][kingX]); //переставляем
+    if ((kingToX != kingX && isOccupied(kingToX, gor)) || (rookToX != rookX && isOccupied(rookToX, gor))) {
+       return false;
+    }
+
+    std::unique_ptr<figure> kingPtr, rookPtr;
+    if (kingToX != kingX) kingPtr = std::move(board[gor][kingX]);
+    if (rookToX != rookX) rookPtr = std::move(board[gor][rookX]);
+
+    if (kingToX != kingX) board[gor][kingToX] = std::move(kingPtr);
+    if (rookToX != rookX) board[gor][rookToX] = std::move(rookPtr);
+
+    if (kingToX != kingX) board[gor][kingX].reset();
+    if (rookToX != rookX) board[gor][rookX].reset();
+
+
     king->setPos({kingToX, gor});
+    rook->setPos({rookToX, gor});
+
     king->setMoved(true);
+    rook->setMoved(true);
 
-    board[gor][kingX].reset();
-    board[gor][rookX].reset();
-
+    std::string move;
+    move += static_cast<char>('a' + kingX);
+    move += static_cast<char>('1' + gor);
+    move += static_cast<char>('a' + kingToX);
+    move += static_cast<char>('1' + gor);
+    
+    movesUCI.push_back(move);
+    
+    moveCount++;
+    if (team == figure::WHITE) {
+        if (kingSide)  whiteCanCastleKingSide  = false;
+        else           whiteCanCastleQueenSide = false;
+    } else {
+        if (kingSide)  blackCanCastleKingSide  = false;
+        else           blackCanCastleQueenSide = false;
+    }
+    
+    updateFen();
     return true;
+}
+
+bool Board::exportToFile(const std::string& filename, int players, int mode){ // функция для создания сохранения
+    updateFen(); //обновляем позицию
+
+    std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "saves"; //составляем путь до сейв папки
+
+    std::filesystem::create_directories(saveDir);
+
+    std::filesystem::path fullpath = saveDir / filename;
+
+    std::ofstream out(fullpath); //открываем файл для записи
+    if(!out.is_open()) return false; //если не открылось
+
+    out << players << "\n" << mode << "\n"; //записываем количество игроков и режим
+    out << fenPos << "\n"; //записываем позицию
+    
+    return false;
+} 
+
+bool Board::importFromFile(const std::string& filename,  std::map<std::string, sf::Texture>& textures){ //FIXME боту передается стандартная расстановка а не расстановка из сохранения
+ 
+    std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "saves"; //составляем путь до сейв папки
+    std::filesystem::path fullpath = saveDir / filename;
+    int players,mode;
+    std::ifstream in(fullpath);
+    if(!in.is_open()) return false;
+
+    std::string line, fen;
+
+    if (!std::getline(in, line)) return false; //читаем строки, чтобы получить количество игроков, режим и фен расстановку
+    players = std::stoi(line);
+    if (!std::getline(in, line)) return false;
+    mode   = std::stoi(line);
+    if (!std::getline(in, fen))  return false;
+    in.close();
+
+    //тут мы будем делить фен строку на части: расположение, сторона, роккировка, взятие на проходе, ходы и полуходы
+    std::istringstream ss(fen);
+    std::string placement, side, castling, ep, hmove, fmove;
+    if (!(ss >> placement >> side >> castling >> ep >> hmove >> fmove)) return false;
+
+
+    for(int y=0; y<8; ++y) //очищаем доску на всякий случай
+        for(int x=0; x<8; ++x)
+            removeFigure(x,y);
+
+    //восстанавливаем фигуры из фен
+    int x = 0, y = 7;
+    for(char c : placement){
+        if(c == '/'){
+            --y; x = 0;
+        }
+        else if(std::isdigit(c)){
+            x += c - '0';
+        }
+        else{
+            figure::teams team = std::isupper(c) ? figure::WHITE : figure::BLACK;
+            char lower = std::tolower(c);
+            std::string key = std::string(1, lower) + (team == figure::WHITE ? "w" : "b"); // FIXED была точка с запятой посередине строки
+            std::unique_ptr<figure> fig;
+            switch(lower){
+                case 'p': fig = std::make_unique<pawn>(  team, std::pair{x,y}, textures[key]); break;
+                case 'n': fig = std::make_unique<knight>(team, std::pair{x,y}, textures[key]); break;
+                case 'b': fig = std::make_unique<bishop>(team, std::pair{x,y}, textures[key]); break;
+                case 'r': fig = std::make_unique<rook>(  team, std::pair{x,y}, textures[key]); break;
+                case 'q': fig = std::make_unique<queen>( team, std::pair{x,y}, textures[key]); break;
+                case 'k': fig = std::make_unique<king>(  team, std::pair{x,y}, textures[key]); break;
+                default:  break;
+            }
+            if(fig) setFigure(x, y, std::move(fig));
+            ++x;
+        }
+    }
+
+    bool whiteToMove = (side == "w"); //узнаем чья очередь ходить
+    int fm = std::stoi(fmove);
+    moveCount = whiteToMove ? (fm - 1)*2 : (fm - 1)*2 + 1;
+        
+    whiteCanCastleKingSide = (castling.find('K') != std::string::npos); //раздаем права на рокировку
+    whiteCanCastleQueenSide = (castling.find('Q') != std::string::npos);
+    blackCanCastleKingSide = (castling.find('k') != std::string::npos);
+    blackCanCastleQueenSide = (castling.find('q') != std::string::npos);
+    
+    //узнаем про взятие на проходе
+    if (ep != "-") {
+        enPassantFlag = true;
+        enPassantPosition = { ep[0] - 'a', ep[1] - '1' };
+    } else {
+        enPassantFlag = false;
+        enPassantPosition = {-1,-1};
+    }
+
+    updateFen();
+    return true;
+
+}
+
+void Board::clear(){
+    for(int y = 0; y < 8; ++y){
+        for(int x = 0; x < 8; ++x){ //очищаем доску 
+            removeFigure(x, y);
+        }
+    }
+}
+
+bool Board::logFen(const std::string& filename) const{ //TODO задачи записываем, если не нужна булевая функция, переделай ее в войд
+    const_cast<Board*>(this)->updateFen();
+    
+    std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "zadachi(potom_pereimenuesh)"; //составляем путь до сейв папки
+
+    std::filesystem::create_directories(saveDir);
+
+    std::filesystem::path fullpath = saveDir / filename;
+
+    std::ofstream out(fullpath, std::ios::app);
+
+    if (!out.is_open()) {
+            return false;
+        }
+
+    out << fenPos << "\n";
+    return true;
+}
+
+bool Board::loadPosFromFEN(const std::string& fen, std::map<std::string, sf::Texture>& textures){ //загружаем одну строку
+    std::istringstream ss(fen); //парсим поля
+    std::string placement, side, castling, ep, hmove, fmove;
+    if (!(ss >> placement >> side >> castling >> ep >> hmove >> fmove))
+        return false;
+
+    for(int y=0; y<8; ++y){
+        for(int x=0; x<8; ++x){
+            removeFigure(x,y);
+        }
+    }
+
+    //восстанавливаем фигуры из фен
+    int x = 0, y = 7;
+    for(char c : placement){
+        if(c == '/'){
+            --y; x = 0;
+        }
+        else if(std::isdigit(c)){
+            x += c - '0';
+        }
+        else{
+            figure::teams team = std::isupper(c) ? figure::WHITE : figure::BLACK;
+            char lower = std::tolower(c);
+            std::string key = std::string(1, lower) + (team == figure::WHITE ? "w" : "b"); // FIXED была точка с запятой посередине строки
+            std::unique_ptr<figure> fig;
+            switch(lower){
+                case 'p': fig = std::make_unique<pawn>(  team, std::pair{x,y}, textures[key]); break;
+                case 'n': fig = std::make_unique<knight>(team, std::pair{x,y}, textures[key]); break;
+                case 'b': fig = std::make_unique<bishop>(team, std::pair{x,y}, textures[key]); break;
+                case 'r': fig = std::make_unique<rook>(  team, std::pair{x,y}, textures[key]); break;
+                case 'q': fig = std::make_unique<queen>( team, std::pair{x,y}, textures[key]); break;
+                case 'k': fig = std::make_unique<king>(  team, std::pair{x,y}, textures[key]); break;
+                default:  break;
+            }
+            if(fig) setFigure(x, y, std::move(fig));
+            ++x;
+        }
+    }
+
+    bool whiteToMove = (side == "w"); //узнаем чья очередь ходить
+    int fm = std::stoi(fmove);
+    moveCount = whiteToMove ? (fm - 1)*2 : (fm - 1)*2 + 1;
+        
+    whiteCanCastleKingSide = (castling.find('K') != std::string::npos); //раздаем права на рокировку
+    whiteCanCastleQueenSide = (castling.find('Q') != std::string::npos);
+    blackCanCastleKingSide = (castling.find('k') != std::string::npos);
+    blackCanCastleQueenSide = (castling.find('q') != std::string::npos);
+    
+    //узнаем про взятие на проходе
+    if (ep != "-") {
+        enPassantFlag = true;
+        enPassantPosition = { ep[0] - 'a', ep[1] - '1' };
+    } else {
+        enPassantFlag = false;
+        enPassantPosition = {-1,-1};
+    }
+
+    updateFen();
+    return true;
+}
+
+bool Board::startRep(const std::string& filename, std::map<std::string, sf::Texture>& textures)
+{
+    std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "zadachi(potom_pereimenuesh)";
+    std::filesystem::path fullpath = saveDir / filename;
+    std::ifstream in(fullpath);
+    if (!in.is_open()) return false;
+
+    fens.clear(); //записываем в вектор тут
+    std::string line;
+    while (std::getline(in, line)) {
+        if (!line.empty())
+            fens.push_back(line);
+    }
+    if (fens.size() < 2) return false;
+
+    index = 0; //инициализируем
+    repTextures = &textures;
+    return loadPosFromFEN(fens[0], textures);
+}
+
+
+static void parsePlacement(const std::string& placement, char out[8][8]) { //парсим положение фигур из фен строки
+    int x = 0, y = 7;
+    for (char c : placement) {
+        if (c == '/') {
+            --y; x = 0;
+        }
+        else if (std::isdigit(c)) {
+            x += c - '0';
+        }
+        else {
+            out[y][x++] = c;
+        }
+    }
+}
+
+static std::pair<std::pair<int,int>,std::pair<int,int>> diffFenMove(const std::string& fenA, const std::string& fenB) { //сравниваем и находим ход
+    auto pa = fenA.substr(0, fenA.find(' '));
+    auto pb = fenB.substr(0, fenB.find(' '));
+
+    char A[8][8] = {}, B[8][8] = {};
+    for(int i=0;i<8;i++) for(int j=0;j<8;j++){ A[i][j]=B[i][j]=' '; }
+    parsePlacement(pa, A);
+    parsePlacement(pb, B);
+
+    std::pair<int,int> from{-1,-1}, to{-1,-1};
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+            if (A[y][x] != B[y][x]) { //сравниваем положение в начальном и конечном варианте и находим диф
+                if (A[y][x] != ' ' && B[y][x] == ' ')
+                    from = {x,y};
+                else if (A[y][x] == ' ' && B[y][x] != ' ')
+                    to   = {x,y};
+            }
+        }
+    }
+    return {from,to};
+}
+
+
+bool Board::processWhiteMove()//TODO эта функция тоже может быть не бул, или даже может быть не функцией, разбить ее можно. Она проверяет позицию щас и ту, которая в файле. Если все сходится, то он  сразу делает ход черными и возвращает ход белым
+{
+    if (index + 1 >= fens.size()) return false; //если вышли за пределы
+    updateFen();
+    if (fenPos != fens[index + 1]) { //сверяем
+        loadPosFromFEN(fens[index], *repTextures); //если не сошлось, откатываем
+        return false;
+    }
+
+    const auto& fenBeforeBlack = fens[index + 1];
+    const auto& fenAfterBlack  = fens[index + 2];
+
+    auto coords = diffFenMove(fenBeforeBlack, fenAfterBlack); //вычисляем координаты
+    lastBlackFrom = coords.first;
+    lastBlackTo   = coords.second;
+
+    index += 2; // Если все сошлось в прошлой проверке, двигаем индекс и ставим уже то, что там после
+    loadPosFromFEN(fens[index], *repTextures);
+    return true;
+}
+
+std::pair<int, int> Board::getLastBlackFrom() const {
+    return lastBlackFrom;
+}
+
+std::pair<int, int> Board::getLastBlackTo() const {
+    return lastBlackTo;
 }

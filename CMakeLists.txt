@@ -9,12 +9,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
 
 # подключаем заголовки
-include_directories(include)
+include_directories(
+    include
+    include/figures
+    include/ui
+)
 
 # ищем все cpp-файлы
 file(GLOB_RECURSE SOURCE_FILES
     src/*.cpp
     src/figures/*.cpp
+    src/ui/*.cpp
 )
 
 # создаём исполняемый файл

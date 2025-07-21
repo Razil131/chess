@@ -33,7 +33,15 @@ public:
     bool isSquareAttack(std::pair<int, int> square, figure::teams team) const; //проверка квадрата на атаку для рокировки
     void fisherPos(std::map<std::string, sf::Texture>& textures); //расстановка по фишеру
     bool fisherCastle(bool kingSide); //функция для рокировки фишера
-
+    void updateFen(); //функция для обновления фен позиции
+    bool exportToFile(const std::string& filename, int players, int mode); // функция для создания сохранения
+    bool importFromFile(const std::string& filename,  std::map<std::string, sf::Texture>& textures); //для загрузки
+    void clear(); // очистить доску от фигур
+    bool logFen(const std::string& filename) const; //функция будет записывать задачи логирывать
+    bool startRep(const std::string& filename, std::map<std::string, sf::Texture>& textures); //читать лог
+    bool processWhiteMove(); //вызывается после каждого хода белых для сверки позиции
+    std::pair<int,int> getLastBlackFrom() const; //геттеры для позиции черных
+    std::pair<int,int> getLastBlackTo() const;
 
 
     bool convertFlag = false; //флаг для convertPawn
@@ -43,12 +51,28 @@ public:
     std::pair<std::pair<int, int>, std::pair<int, int>> lastMove; //переменная для хранения последнего хода
     bool mateFlag = false;//флаг для мата
     bool staleMateFlag = false; //флаг для пата
+    bool castleflag = false;
+    bool whiteCanCastleKingSide;//права на рокировку
+    bool whiteCanCastleQueenSide;
+    bool blackCanCastleKingSide;
+    bool blackCanCastleQueenSide;
+    int whiteRookKS; //координаты ладей
+    int whiteRookQS;
+    int blackRookKS;
+    int blackRookQS;
+    std::pair<int, int> lastBlackFrom; //для последнего хода
+    std::pair<int, int> lastBlackTo; //для последнего хода
 
     std::vector<std::string> movesUCI; //будем тут хранить ходы в формате для движка
+    std::string fenPos; //тут мы храним позицию для фишера вс компьютера
+    std::vector<std::string> fens; //будут строки храниться
+    size_t index = 0; // индекс
+    std::map<std::string, sf::Texture>* repTextures = nullptr; //текстуры
+
 
 
 private:
     std::vector<std::vector<std::unique_ptr<figure>>> board; //доска
     int moveCount;
-
+    bool loadPosFromFEN(const std::string& fen, std::map<std::string, sf::Texture>& textures);
 };
