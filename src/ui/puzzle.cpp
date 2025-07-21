@@ -80,8 +80,6 @@ void drawChooseFigureMenuCreatePuzzle(sf::RenderWindow& window,
 }
 
 void drawNextModeButton(sf::RenderWindow& window, sf::RectangleShape& nextModeBtnShape, sf::Font& font, int cellSize, int offsetX, int offsetY){
-    nextModeBtnShape = makeButton(25,700,sf::Color(0,255,0),sf::Color(0,0,0));
-    nextModeBtnShape.setPosition(offsetX*1.5+cellSize*8,offsetY+cellSize*4);
     window.draw(nextModeBtnShape);
     drawLabel(window,font,nextModeBtnShape,">",24);
 }
@@ -99,11 +97,35 @@ int countPuzzles(const std::string& folder) {
     return count;
 }
 
-// вернуть название нового пазла
-std::string generatePuzzleFilename() {
-    int count = countPuzzles();  // Получаем текущее количество файлов
-    std::ostringstream ss;
-    ss << "puzzle_" << std::setw(3) << std::setfill('0') << (count + 1) << ".fen";
+std::string generatePuzzleFilename(const std::string& folder) {
+    std::set<int> existing;
+
+    if (fs::exists(folder) && fs::is_directory(folder)) {  // записываем в set все номера пазлов которые есть
+        for (auto& entry : fs::directory_iterator(folder)) {
+            if (!entry.is_regular_file()) continue;
+            auto name = entry.path().filename().string();
+            // ожидаем формат "puzzle_ddd.fen"
+            if (name.rfind("puzzle_", 0) != 0) continue;
+            if (name.size() < 12 || name.substr(name.size()-4) != ".fen") continue;
+            // извлечь цифры
+            std::string num = name.substr(7, name.size() - 11); // от "puzzle_" до ".fen"
+            try {
+                existing.insert(std::stoi(num));
+            } catch(...) {}
+        }
+    }
+
+    // найдем первый не занятой номер
+    int candidate = 1;
+    while (existing.count(candidate)) {
+        ++candidate;
+    }
+
+    std::ostringstream ss; // создаем название нового пазла
+    ss << "puzzle_"
+       << std::setw(3) << std::setfill('0')
+       << candidate
+       << ".fen";
     return ss.str();
 }
 
@@ -115,4 +137,48 @@ std::string makePuzzleFilename(std::string& numberStr) {
     oss << "puzzle_" << std::setw(3) << std::setfill('0') << num << ".fen";
     
     return oss.str();
+}
+
+//удалить пазл по номеру
+bool deletePuzzleByNumber(const std::string& numberStr, const std::string& folder) {
+    try {
+        std::string nameCopy = numberStr; // так как makePuzzleFilename принимает ссылку
+        std::string filename = makePuzzleFilename(nameCopy); // -> puzzle_003.fen
+        std::string fullPath = folder + "/" + filename;
+
+        if (fs::exists(fullPath)) {
+            return fs::remove(fullPath); // true — если удалён
+        } else {
+            return false; // файла не было
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error deleting puzzle: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+// функция возвращает номера всех существующих пазлов
+std::vector<int> getPuzzleNumbers(const std::string& folder) {
+    std::vector<int> numbers;
+
+    if (fs::exists(folder) && fs::is_directory(folder)) { // проходимся по всем файлам записываем номера существующих
+        for (const auto& entry : fs::directory_iterator(folder)) {
+            if (entry.is_regular_file()) {
+                std::string filename = entry.path().filename().string();
+
+                if (filename.rfind("puzzle_", 0) == 0 && filename.size() > 11 && filename.substr(filename.size() - 4) == ".fen") {
+                    std::string numStr = filename.substr(7, filename.size() - 11);
+                    try {
+                        int num = std::stoi(numStr);
+                        numbers.push_back(num);
+                    } catch (...) {
+                        continue; // пропускаем кривые имена
+                    }
+                }
+            }
+        }
+    }
+
+    std::sort(numbers.begin(), numbers.end()); // сортируем по порядку
+    return numbers;
 }

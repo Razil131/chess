@@ -18,13 +18,13 @@ void vsPlayerStandart(sf::RenderWindow& window,sf::Font& font, std::string savef
 
 void vsPlayerFisher(sf::RenderWindow& window,sf::Font& font, std::string savefile = "");
 
-void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam = figure::WHITE, std::string savefile = "");
+void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, int difficult, figure::teams userTeam = figure::WHITE, std::string savefile = "");
 
-void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam = figure::WHITE, std::string savefile = "");
+void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, int difficult, figure::teams userTeam = figure::WHITE, std::string savefile = "");
 
 void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font, std::string savefile = "");
 
-void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam = figure::WHITE, std::string savefile = "");
+void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, int difficult, figure::teams userTeam = figure::WHITE, std::string savefile = "");
 
 // открыть меню создания задач
 void createPuzzle(sf::RenderWindow& window,sf::Font& font);

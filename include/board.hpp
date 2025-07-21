@@ -39,9 +39,9 @@ public:
     void clear(); // очистить доску от фигур
     bool logFen(const std::string& filename) const; //функция будет записывать задачи логирывать
     bool startRep(const std::string& filename, std::map<std::string, sf::Texture>& textures); //читать лог
-    int processWhiteMove(); //вызывается после каждого хода белых для сверки позиции
     std::pair<int,int> getLastBlackFrom() const; //геттеры для позиции черных
     std::pair<int,int> getLastBlackTo() const;
+    int processWhiteMove(); //вызывается после каждого хода белых для сверки позиции
 
 
 
