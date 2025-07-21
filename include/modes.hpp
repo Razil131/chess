@@ -3,7 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "figure.hpp"
-#include "create_puzzle.hpp"
+#include "puzzle.hpp"
 #include "textures.hpp"
 #include "board.hpp"
 #include "ui_board.hpp"
@@ -28,3 +28,6 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams use
 
 // открыть меню создания задач
 void createPuzzle(sf::RenderWindow& window,sf::Font& font);
+
+// начать решать пазл
+void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuzzleNum);

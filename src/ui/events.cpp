@@ -163,7 +163,8 @@ bool applyMoveIfValid(
     bool& hasMoved,
     float OFFSETX,
     float OFFSETY,
-    float CELLSIZE
+    float CELLSIZE,
+    bool drawLastMove
 ) {
     for (auto& move : possibleMoves) { // перебираем возможные ходы
         sf::FloatRect cellRect( // создаем квадратную область в каждом из возможных ходов чтобы потом проверять что мышка в этой области
@@ -175,20 +176,17 @@ bool applyMoveIfValid(
 
         std::pair<int,int> prev_pos = selectedFigure->getPos();
         if (board->makeMove(selectedFigure->getPos(), move)) { // ходим
-            lastMoveFrom.setPosition(
-            OFFSETX + prev_pos.first * CELLSIZE,
-            OFFSETY + (7 - prev_pos.second) * CELLSIZE
-            );
-            lastMoveTo.setPosition(
-                OFFSETX + move.first * CELLSIZE,
-                OFFSETY + (7 - move.second) * CELLSIZE
-            );
-            selectedFigure->setPos(move);
-            selectedFigure->getSprite()->setPosition(
-                OFFSETX + 10 + move.first * CELLSIZE,
-                OFFSETY + 15 + (7 - move.second) * CELLSIZE
-            );
-            hasMoved = true;
+            if (drawLastMove){ // если нужно отрисовывать последних ход
+                lastMoveFrom.setPosition(
+                OFFSETX + prev_pos.first * CELLSIZE,
+                OFFSETY + (7 - prev_pos.second) * CELLSIZE
+                );
+                lastMoveTo.setPosition(
+                    OFFSETX + move.first * CELLSIZE,
+                    OFFSETY + (7 - move.second) * CELLSIZE
+                );
+                hasMoved = true;
+            }
             return true; // сходили
         }
     }

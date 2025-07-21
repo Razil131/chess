@@ -212,6 +212,7 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
     figure::teams userTeam = figure::WHITE; 
     bool needToQuitMenuFlag = false;
     bool createFlag = false; // флаг для входа в режим создания
+    std::string solvingPuzzleNum = "-1"; // номер решаемого пазла -1 - не решается пазл сейчас
 
     auto saves = getSaveFilesWithoutDotFen(); 
     float scrollOffset = 0.f; // где начало скрола
@@ -237,7 +238,7 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
             drawGameTypeMenu(window,menuButtonsRects,backBtn,font);
         }
         else if (currentMode == Puzzles){
-            drawPuzzleMenu(window,menuButtonsRects,backBtn,createPuzzleBtn,font,150);
+            drawPuzzleMenu(window,menuButtonsRects,backBtn,createPuzzleBtn,font,countPuzzles());
         }
         else if (currentMode == EnemyChoose){
             drawOpponentMenu(window,menuButtonsRects,backBtn,font);
@@ -279,7 +280,7 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
                 if (backBtn.getGlobalBounds().contains(mousePos)){ 
                     clickedButtonID = "back";
                 }
-                else if (createPuzzleBtn.getGlobalBounds().contains(mousePos)){
+                else if (currentMode == Puzzles and createPuzzleBtn.getGlobalBounds().contains(mousePos)){
                     clickedButtonID = "create";
                 }
                 else{
@@ -338,6 +339,11 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
                 needToQuitMenuFlag = true;
                 break;
             }
+            else if (!clickedButtonID.empty() && std::all_of(clickedButtonID.begin(), clickedButtonID.end(), ::isdigit)){
+                solvingPuzzleNum=clickedButtonID;
+                needToQuitMenuFlag = true;
+                break;
+            }
             else if (clickedButtonID == "back"){
                 if (currentMode == ModeChoose)
                     currentMode = MainMenu;
@@ -358,6 +364,8 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
     }
     if (createFlag)  // запускаем функцию подходящию под выбранные настройки
         createPuzzle(window,font);
+    else if (solvingPuzzleNum != "-1")
+        solvePuzzle(window,font,solvingPuzzleNum);       
     else if (player == 1 and mode == 1)
         vsComputerStandart(window,font,userTeam);
     else if (player == 1 and mode == 2)

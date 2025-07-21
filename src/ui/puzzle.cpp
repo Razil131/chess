@@ -1,4 +1,4 @@
-#include "create_puzzle.hpp"
+#include "puzzle.hpp"
 
 void createChooseFigureMenuCreatePuzzle(sf::RenderWindow& window,
     std::map<std::string, sf::Texture>& textures,
@@ -84,4 +84,35 @@ void drawNextModeButton(sf::RenderWindow& window, sf::RectangleShape& nextModeBt
     nextModeBtnShape.setPosition(offsetX*1.5+cellSize*8,offsetY+cellSize*4);
     window.draw(nextModeBtnShape);
     drawLabel(window,font,nextModeBtnShape,">",24);
+}
+
+// вернуть количество файлов в папке puzzles (задач)
+int countPuzzles(const std::string& folder) { 
+    int count = 0;
+    if (!fs::exists(folder) || !fs::is_directory(folder))
+        return 0;
+
+    for (const auto& entry : fs::directory_iterator(folder)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".fen")
+            ++count;
+    }
+    return count;
+}
+
+// вернуть название нового пазла
+std::string generatePuzzleFilename() {
+    int count = countPuzzles();  // Получаем текущее количество файлов
+    std::ostringstream ss;
+    ss << "puzzle_" << std::setw(3) << std::setfill('0') << (count + 1) << ".fen";
+    return ss.str();
+}
+
+// вернуть название пазла по его номеру
+std::string makePuzzleFilename(std::string& numberStr) {
+    int num = std::stoi(numberStr);
+    
+    std::ostringstream oss;
+    oss << "puzzle_" << std::setw(3) << std::setfill('0') << num << ".fen";
+    
+    return oss.str();
 }

@@ -16,3 +16,4 @@ debug_utils.cpp
 debug_utils.hpp
 stockfish
 saves/
+puzzles/
