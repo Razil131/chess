@@ -37,7 +37,7 @@
 2. **Откройте в меню "Пуск" MSYS2 MinGW 64-bit**
 3. **При помощи MinGW выполните установку компилятора (gcc), make, cmake и утилит:**
    ```bash
-    pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
+   pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
 4. **Выполните установку SFML при помощи MinGW**
    ```bash
    pacman -S mingw-w64-x86_64-sfml

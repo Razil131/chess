@@ -220,9 +220,11 @@ void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams u
         delete board;
         return;
     }
+    int dif = 20; //TODO сложность
+    std::string out = "setoption name Skill Level value " + std::to_string(dif);
+    engine.sendCommand(out);
     engine.sendCommand("uci"); //включаем протокол UCI 😎
     engine.sendCommand("isready"); //проверяем готовность
-    //engine.sendCommand("position fen 4k3/8/8/8/8/8/PPPPPPPP/4K3 w - - 0 1");
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
         if (board->getCurrentTeam() != userTeam) { //проверяем когда ходит бот
             std::string moves; 
@@ -401,6 +403,9 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams use
     }
     engine.sendCommand("uci"); //включаем протокол UCI 😎
     engine.sendCommand("setoption name UCI_Chess960 value true"); //запускаем фишера
+    int dif = 20; //TODO сложность
+    std::string out = "setoption name Skill Level value " + std::to_string(dif);
+    engine.sendCommand(out);
     engine.sendCommand("isready"); //проверяем готовность
     engine.sendCommand(std::string("position fen ") + board->fenPos); //сообщаем позицию боту
 
@@ -408,15 +413,12 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams use
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
         
         processEvents(window, font, board, 2, 1, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE, &rightCastle, &leftCastle); // обрабатываем все возможные события клик мыши и тд
-
-        if (board->getCurrentTeam() != userTeam) {
-        // 1.2) Формируем строку всех предыдущих ходов
+        if (board->getCurrentTeam() != userTeam) { //формируем строку всех предыдущих ходов
         std::string moves;
         for (const auto& m : board->movesUCI) {
             moves += m + " ";
         }
-        // 1.3) Отправляем движку позицию и ждём лучший ход
-        engine.sendCommand("position fen " + board->fenPos + " moves " + moves);
+        engine.sendCommand("position fen " + board->fenPos + " moves " + moves); //отправляем движку позицию и ждём ход
         engine.sendCommand("go movetime 1000");
 
         std::string bestmove;
@@ -431,14 +433,14 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams use
             }
         } while (bestmove.empty());
 
-        // 1.4) Разбираем UCI-строку bestmove
+        //разбираем строку на наши коорды
         int fx = bestmove[0] - 'a';
         int fy = bestmove[1] - '1';
         int tx = bestmove[2] - 'a';
         int ty = bestmove[3] - '1';
         char prom = bestmove.size() >= 5 ? bestmove[4] : '\0';
 
-        // 1.5) Делаем ход через ваш метод
+        //делаем ход
         board->makeMove({fx, fy}, {tx, ty});
          lastMoveFrom.setPosition(OFFSETX + fx * CELLSIZE,
                                  OFFSETY + (7 - fy) * CELLSIZE);
@@ -446,7 +448,7 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams use
                                  OFFSETY + (7 - ty) * CELLSIZE);
         hasMoved = true;
 
-        // 1.6) Если была превращение — вызываем convertPawn
+        //превращение
         if (prom) {
             figure::figureTypes newType;
             switch (prom) {
@@ -455,7 +457,6 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams use
                 case 'n': newType = figure::KNIGHT; break;
                 case 'q': default:  newType = figure::QUEEN;
             }
-            // текстура выбирается по цвету ботa
             std::string tname = (userTeam == figure::WHITE ? "b" : "w");
             switch (newType) {
                 case figure::QUEEN:  tname = "q" + tname; break;
@@ -667,8 +668,10 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams use
         return;
     }
     engine.sendCommand("uci"); //включаем протокол UCI 😎
+    int dif = 20; //TODO сложность
+    std::string out = "setoption name Skill Level value " + std::to_string(dif);
+    engine.sendCommand(out);
     engine.sendCommand("isready"); //проверяем готовность
-    //engine.sendCommand("position fen 4k3/8/8/8/8/8/PPPPPPPP/4K3 w - - 0 1");
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
         if (board->getCurrentTeam() != userTeam) { //проверяем когда ходит бот
             std::string moves; 

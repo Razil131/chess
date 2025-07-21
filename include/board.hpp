@@ -40,6 +40,8 @@ public:
     bool logFen(const std::string& filename) const; //функция будет записывать задачи логирывать
     bool startRep(const std::string& filename, std::map<std::string, sf::Texture>& textures); //читать лог
     int processWhiteMove(); //вызывается после каждого хода белых для сверки позиции
+    std::pair<int,int> getLastBlackFrom() const; //геттеры для позиции черных
+    std::pair<int,int> getLastBlackTo() const;
 
 
 
@@ -59,6 +61,8 @@ public:
     int whiteRookQS;
     int blackRookKS;
     int blackRookQS;
+    std::pair<int, int> lastBlackFrom; //для последнего хода
+    std::pair<int, int> lastBlackTo; //для последнего хода
 
     std::vector<std::string> movesUCI; //будем тут хранить ходы в формате для движка
     std::string fenPos; //тут мы храним позицию для фишера вс компьютера

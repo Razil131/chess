@@ -898,26 +898,87 @@ bool Board::startRep(const std::string& filename, std::map<std::string, sf::Text
     return loadPosFromFEN(fens[0], textures);
 }
 
-int Board::processWhiteMove()//Она проверяет позицию щас и ту, которая в файле. Если все сходится, то он  сразу делает ход черными и возвращает ход белым
-{ // return 0 — ход не сделан fen не совпал  return 1 — ход сделан успешно  return 2 — индекс вышел за границу
-    if (index + 1 < fens.size()) { // если следующий fen есть
-        updateFen();
-        if (fenPos != fens[index + 1]) { // если не совпадает
-            loadPosFromFEN(fens[index], *repTextures);  // откат
-            return 0;  // несовпадение
-        }
-    }
-    else { // следующего фена нет 
+
+int Board::processWhiteMove()
+// return 0 — ход не сделан (fen не совпал)
+// return 1 — ход сделан успешно
+// return 2 — индекс вышел за границу (после хода)
+{
+    if (index + 1 >= fens.size()) {
         loadPosFromFEN(fens[index], *repTextures);
-        return 0;
+        return 2; // конца достигли
+    }
+
+    updateFen();
+
+    if (fenPos != fens[index + 1]) {
+        loadPosFromFEN(fens[index], *repTextures);
+        return 0; // FEN не совпал — откат
+    }
+
+    // сохраняем ход черных
+    if (index + 2 < fens.size()) {
+        auto coords = diffFenMove(fens[index + 1], fens[index + 2]);
+        lastBlackFrom = coords.first;
+        lastBlackTo = coords.second;
+    } else {
+        lastBlackFrom = {-1, -1};
+        lastBlackTo = {-1, -1};
     }
 
     index += 2;
 
-    if (index >= fens.size()) { // существует ли след ход белых
-        return 2;  // ходов нет - победа
+    if (index >= fens.size()) {
+        return 2; // больше нет ходов — конец
     }
 
     loadPosFromFEN(fens[index], *repTextures);
     return 1;
+}
+
+static void parsePlacement(const std::string& placement, char out[8][8]) { //парсим положение фигур из фен строки
+    int x = 0, y = 7;
+    for (char c : placement) {
+        if (c == '/') {
+            --y; x = 0;
+        }
+        else if (std::isdigit(c)) {
+            x += c - '0';
+        }
+        else {
+            out[y][x++] = c;
+        }
+    }
+}
+
+static std::pair<std::pair<int,int>,std::pair<int,int>> diffFenMove(const std::string& fenA, const std::string& fenB) { //сравниваем и находим ход
+    auto pa = fenA.substr(0, fenA.find(' '));
+    auto pb = fenB.substr(0, fenB.find(' '));
+
+    char A[8][8] = {}, B[8][8] = {};
+    for(int i=0;i<8;i++) for(int j=0;j<8;j++){ A[i][j]=B[i][j]=' '; }
+    parsePlacement(pa, A);
+    parsePlacement(pb, B);
+
+    std::pair<int,int> from{-1,-1}, to{-1,-1};
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+            if (A[y][x] != B[y][x]) { //сравниваем положение в начальном и конечном варианте и находим диф
+                if (A[y][x] != ' ' && B[y][x] == ' ')
+                    from = {x,y};
+                else if (A[y][x] == ' ' && B[y][x] != ' ')
+                    to   = {x,y};
+            }
+        }
+    }
+    return {from,to};
+}
+
+std::pair<int, int> Board::getLastBlackFrom() const {
+    return lastBlackFrom;
+}
+
+std::pair<int, int> Board::getLastBlackTo() const {
+    return lastBlackTo;
+
 }
