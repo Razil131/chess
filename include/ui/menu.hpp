@@ -19,13 +19,16 @@ void drawPuzzleMenu(sf::RenderWindow& win, // отрисовать меню с �
                     std::map<std::string, sf::RectangleShape>& numberBtns,
                     sf::RectangleShape& backBtn,
                     sf::RectangleShape& createBtn,
+                    sf::RectangleShape& deleteModeBtn,
                     sf::Font& font,
-                    int puzzleCount);
+                    std::vector<int>& puzzleNumbers);
 
 void drawGameTypeMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShape>& btns, sf::RectangleShape& backBtn, sf::Font& font); // отрисовать выбор режима игры
 
 void drawOpponentMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShape>& btns, sf::RectangleShape& backBtn, sf::Font& font); // отрисовать меню выбора соперника ии или человек
 
 void drawColorMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShape>& btns, sf::RectangleShape& backBtn, sf::Font& font); // отрисовать выбор цвета команды
+
+void drawDifficultMenu(sf::RenderWindow& win, std::map<std::string, sf::RectangleShape>& btns ,sf::RectangleShape& backBtn, sf::Font& font); // отрисовка меню выбора сложности
 
 void createMainMenu(sf::RenderWindow& window, sf::Font& font); // создать меню для перезапуска после конца игры

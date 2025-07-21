@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <filesystem>
+#include <set>
 #include "board.hpp"
 #include "menu.hpp"
 #include "figure.hpp"
@@ -34,7 +35,12 @@ void drawNextModeButton(sf::RenderWindow& window, sf::RectangleShape& nextModeBt
 int countPuzzles(const std::string& folder = "../puzzles"); 
 
 // вернуть название нового пазла
-std::string generatePuzzleFilename(); 
+std::string generatePuzzleFilename(const std::string& folder = "../puzzles");
 
 // вернуть название пазла по его номеру
 std::string makePuzzleFilename(std::string& numberStr); 
+
+// удалить пазл по его номеру
+bool deletePuzzleByNumber(const std::string& numberStr, const std::string& folder = "../puzzles/");
+
+std::vector<int> getPuzzleNumbers(const std::string& folder = "../puzzles");

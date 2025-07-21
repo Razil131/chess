@@ -96,31 +96,36 @@ void drawSaveMenu(sf::RenderWindow& win,
     drawBackButton(win, backBtn, font);
 }
 
-void drawPuzzleMenu(sf::RenderWindow& win, // отрисовка меню выбора задач #TODO сделать чтобы вообще эти задачи хоть как то работали
+void drawPuzzleMenu(sf::RenderWindow& win,
                     std::map<std::string, sf::RectangleShape>& numberBtns,
                     sf::RectangleShape& backBtn,
                     sf::RectangleShape& createBtn,
+                    sf::RectangleShape& deleteModeBtn,
                     sf::Font& font,
-                    int puzzleCount)
+                    std::vector<int>& puzzleNumbers)
 {
     numberBtns.clear();
     const float BTN = 50, SP = 10; // размер кнопок и расстояние между ними
     const int cols = 14; // количесво колонок с кнопками 14 - максимум что влезает в экран с текущими параметрами
     sf::FloatRect area(30, 20, win.getSize().x-20, win.getSize().y-25); // создаем область для кнопок
     float y0 = area.top;
-    for (int idx=0; idx<puzzleCount; idx++) { // размещаем кнопки
-        int r = idx/cols, c = idx%cols ; // строка и колонка для кнопки
+    for (int i = 0; i < puzzleNumbers.size(); ++i) {// размещаем кнопки
+        int puzzleNum = puzzleNumbers[i];
+        int r = i / cols, c = i % cols; // строка и колонка для кнопки
         auto btn = makeButton(BTN, BTN, sf::Color(200,200,200), sf::Color::Black); // создаем кнопку
         btn.setPosition(area.left + c*(BTN+SP) + BTN/2,
                         y0 + r*(BTN+SP) + BTN/2);
-        numberBtns[std::to_string(idx+1)] = btn; // записываем эту кнопку в массив
+        numberBtns[std::to_string(puzzleNum)] = btn; // записываем эту кнопку в массив
         win.draw(btn);
-        drawLabel(win, font, btn, std::to_string(idx+1), 20); // рисуем надпись на кнопке
+        drawLabel(win, font, btn, std::to_string(puzzleNum), 20); // рисуем надпись на кнопке
     }
     const float CW = 700, CH = 40; // параметры кнопки создать ширина и высота
     createBtn = makeButton(CW, CH, sf::Color(100,220,100), sf::Color::Black); // кнопка
     createBtn.setPosition(area.left + CW/2, win.getSize().y - CH/2 - 10);
     win.draw(createBtn);
+
+    win.draw(deleteModeBtn); // кнопка для включения режима удаления
+    drawLabel(win, font, deleteModeBtn, "Delete Mode", 18);
     drawLabel(win, font, createBtn, "Create", 18); // текст
     drawBackButton(win, backBtn, font); // создаем кнопку back
 }
@@ -200,19 +205,50 @@ void drawColorMenu(sf::RenderWindow& win, // отрисовка меню выб�
     }
     drawBackButton(win, backBtn, font); // рисуем кнопку назад (back)
 } 
+
+void drawDifficultMenu(sf::RenderWindow& win, // отрисовка меню выбора сложности
+    std::map<std::string, sf::RectangleShape>& btns,
+    sf::RectangleShape& backBtn,
+    sf::Font& font){
+    btns.clear();
+    const float W=180, H=50, M=20; // ширина высота расстояние между кнопками
+    auto c = sf::Vector2f(win.getSize())*0.5f;  // получаем размер окна /2 (точка центра окна)
+    std::vector<std::pair<std::string,std::string>> list = {
+        {"easy","Easy"}, // список кнопок и их id
+        {"normal","Normal"},
+        {"hard","Hard"},
+        {"insane", "Insane"}
+    };
+    float total = list.size()*H + (list.size()-1)*M; // сколько всего по y занимают кнопки
+    float y0 = c.y - total/2 + H/2; // точка начала создания кнопок по y
+    for (int i=0;i<list.size();i++) {
+        auto [k,l] = list[i];
+        auto b = makeButton(W,H,sf::Color(50,50,130),sf::Color::Black); // создаем кнопки
+        b.setPosition(c.x, y0 + i*(H+M));
+        btns[k]=b;
+        win.draw(b);
+        drawLabel(win,font,b,l); // рисуем текст на кнопках
+    }
+    drawBackButton(win, backBtn, font); // рисуем кнопку назад (back)
+
+
+}
+
 // TODO сделать Draw...Menu отдельной функцией чтобы не повторяться
 void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенесена в game.cpp чтобы после окончания игры можно было меню открыть
-    enum MainMenuModes {MainMenu, Puzzles, ModeChoose ,EnemyChoose, TeamChoose, Continue, DEBUG}; // экраны в меню ЧТОБЫ ОТКЛЮЧИТЬ МЕНЮ DEBUG
+    enum MainMenuModes {MainMenu, Puzzles, ModeChoose ,EnemyChoose, TeamChoose, DifficultChoose, Continue, DEBUG}; // экраны в меню ЧТОБЫ ОТКЛЮЧИТЬ МЕНЮ DEBUG
 
 
     MainMenuModes currentMode = MainMenu; // заменить MainMenu на DEBUG для отключения меню будет выбран режим по параметрам ниже
     int mode = 1; //тут по идее мы делаем от одного до 3, где 1 - дефлот шахматы, 2 - фишер, 3 - до 3 шахов
     int player = 1; //если 1 - игра с компом, если 2 - два игрока
-    int dif = 1; //TODO потом switch case сделать чтобы выбирать сложность
+    int difficult = 5; // сложность 1-20
     figure::teams userTeam = figure::WHITE; 
     bool needToQuitMenuFlag = false;
     bool createFlag = false; // флаг для входа в режим создания
     std::string solvingPuzzleNum = "-1"; // номер решаемого пазла -1 - не решается пазл сейчас
+    bool deleteMode = false; // режим удаления пазлов
+    std::vector<int> puzzleNumbers = getPuzzleNumbers();
 
     auto saves = getSaveFilesWithoutDotFen(); 
     float scrollOffset = 0.f; // где начало скрола
@@ -223,6 +259,13 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
     std::map<std::string,sf::RectangleShape> menuButtonsRects; // мапа кнопок и их id на экране
     sf::RectangleShape backBtn; // кнопка назад 
     sf::RectangleShape createPuzzleBtn; // кнопка создания задачи
+    sf::RectangleShape deletePuzzleModeBtn; // кнопка для включения режима удаления задач
+    const float CW = 700, CH = 40;
+    sf::FloatRect area(30, 20, window.getSize().x-20, window.getSize().y-25); // создаем область для кнопок
+    deletePuzzleModeBtn = makeButton(CW, CH, sf::Color::Red, sf::Color::Black);
+    deletePuzzleModeBtn.setOrigin(CW/2, CH/2);
+    deletePuzzleModeBtn.setPosition(area.left + CW/2, window.getSize().y - CH*1.5f - 20);
+
     std::string clickedButtonID; // и id кнопки на которую нажали
     while (window.isOpen()){ // основной цикл для меню заканчивается когда меню закрывается и открывается игра
         window.clear(sf::Color(128,128,128));
@@ -238,13 +281,16 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
             drawGameTypeMenu(window,menuButtonsRects,backBtn,font);
         }
         else if (currentMode == Puzzles){
-            drawPuzzleMenu(window,menuButtonsRects,backBtn,createPuzzleBtn,font,countPuzzles());
+            drawPuzzleMenu(window,menuButtonsRects,backBtn,createPuzzleBtn,deletePuzzleModeBtn,font,puzzleNumbers);
         }
         else if (currentMode == EnemyChoose){
             drawOpponentMenu(window,menuButtonsRects,backBtn,font);
         }
         else if (currentMode == TeamChoose){
             drawColorMenu(window,menuButtonsRects,backBtn,font);
+        }
+        else if (currentMode == DifficultChoose){
+            drawDifficultMenu(window,menuButtonsRects,backBtn,font);
         }
         window.display();
         sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
@@ -261,11 +307,11 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
                     std::string opponent = clickedSave.substr(secondUnderscorePos + 1, dotPos - secondUnderscorePos - 1);
                     clickedSave+=".fen";
                     if (opponent == "vsComputer" and mode == "Classic") // запускаем функцию подходящию под выбранные настройки
-                        vsComputerStandart(window, font, userTeam, clickedSave);
+                        vsComputerStandart(window, font,5, userTeam, clickedSave); // TODO сделать чтобы сложность сохранялась в файл
                     else if (opponent == "vsComputer" and mode == "Fisher")
-                        vsComputerFisher(window, font, userTeam, clickedSave);
+                        vsComputerFisher(window, font,5, userTeam, clickedSave);
                     else if (opponent == "vsComputer" and mode == "3Check")
-                        vsComputer3Check(window, font,userTeam, clickedSave);
+                        vsComputer3Check(window, font,5, userTeam, clickedSave);
                     else if (opponent == "vsPlayer" and mode == "Classic")
                         vsPlayerStandart(window, font, clickedSave);
                     else if (opponent == "vsPlayer" and mode == "Fisher")
@@ -282,6 +328,9 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
                 }
                 else if (currentMode == Puzzles and createPuzzleBtn.getGlobalBounds().contains(mousePos)){
                     clickedButtonID = "create";
+                }
+                else if (currentMode == Puzzles and deletePuzzleModeBtn.getGlobalBounds().contains(mousePos)){
+                    clickedButtonID = "deletemode";
                 }
                 else{
                     for (auto& [id, rect] : menuButtonsRects) { // по всему списку кнопок проходимся
@@ -326,11 +375,29 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
             }
             else if (clickedButtonID == "black"){
                 userTeam = figure::BLACK;
-                needToQuitMenuFlag = true;
-                break;
+                currentMode = DifficultChoose;
             }
             else if (clickedButtonID == "white"){
                 userTeam = figure::WHITE;
+                currentMode = DifficultChoose;
+            }
+            else if (clickedButtonID == "easy"){
+                difficult = 5;
+                needToQuitMenuFlag = true;
+                break;
+            }
+            else if (clickedButtonID == "normal"){
+                difficult = 10;
+                needToQuitMenuFlag = true;
+                break;
+            }
+            else if (clickedButtonID == "hard"){
+                difficult = 15;
+                needToQuitMenuFlag = true;
+                break;
+            }
+            else if (clickedButtonID == "insane"){
+                difficult = 20;
                 needToQuitMenuFlag = true;
                 break;
             }
@@ -339,10 +406,21 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
                 needToQuitMenuFlag = true;
                 break;
             }
+            else if (clickedButtonID == "deletemode"){
+                deleteMode = !deleteMode;
+                deletePuzzleModeBtn.setFillColor(deleteMode ? sf::Color(0,255,0):sf::Color(255,0,0));
+            }
+
             else if (!clickedButtonID.empty() && std::all_of(clickedButtonID.begin(), clickedButtonID.end(), ::isdigit)){
-                solvingPuzzleNum=clickedButtonID;
-                needToQuitMenuFlag = true;
-                break;
+                if (deleteMode){ // если включен режим удаления
+                    deletePuzzleByNumber(clickedButtonID); // удалить пазл
+                    puzzleNumbers = getPuzzleNumbers();
+                }
+                else{
+                    solvingPuzzleNum=clickedButtonID; // иначе запустить пазл
+                    needToQuitMenuFlag = true;
+                    break;
+                }
             }
             else if (clickedButtonID == "back"){
                 if (currentMode == ModeChoose)
@@ -357,6 +435,8 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
                     currentMode = EnemyChoose;
                 else if (currentMode == TeamChoose)
                     currentMode = EnemyChoose;
+                else if (currentMode = DifficultChoose)
+                    currentMode = TeamChoose;
             }
         }
         if (needToQuitMenuFlag)
@@ -367,11 +447,11 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
     else if (solvingPuzzleNum != "-1")
         solvePuzzle(window,font,solvingPuzzleNum);       
     else if (player == 1 and mode == 1)
-        vsComputerStandart(window,font,userTeam);
+        vsComputerStandart(window,font, difficult,userTeam);
     else if (player == 1 and mode == 2)
-        vsComputerFisher(window,font, userTeam);
+        vsComputerFisher(window,font, difficult, userTeam);
     else if (player == 1 and mode == 3)
-        vsComputer3Check(window,font,userTeam);
+        vsComputer3Check(window,font, difficult, userTeam);
     else if (player == 2 and mode == 1)
         vsPlayerStandart(window,font);
     else if (player == 2 and mode == 2)

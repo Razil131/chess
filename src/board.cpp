@@ -899,43 +899,6 @@ bool Board::startRep(const std::string& filename, std::map<std::string, sf::Text
 }
 
 
-int Board::processWhiteMove()
-// return 0 — ход не сделан (fen не совпал)
-// return 1 — ход сделан успешно
-// return 2 — индекс вышел за границу (после хода)
-{
-    if (index + 1 >= fens.size()) {
-        loadPosFromFEN(fens[index], *repTextures);
-        return 2; // конца достигли
-    }
-
-    updateFen();
-
-    if (fenPos != fens[index + 1]) {
-        loadPosFromFEN(fens[index], *repTextures);
-        return 0; // FEN не совпал — откат
-    }
-
-    // сохраняем ход черных
-    if (index + 2 < fens.size()) {
-        auto coords = diffFenMove(fens[index + 1], fens[index + 2]);
-        lastBlackFrom = coords.first;
-        lastBlackTo = coords.second;
-    } else {
-        lastBlackFrom = {-1, -1};
-        lastBlackTo = {-1, -1};
-    }
-
-    index += 2;
-
-    if (index >= fens.size()) {
-        return 2; // больше нет ходов — конец
-    }
-
-    loadPosFromFEN(fens[index], *repTextures);
-    return 1;
-}
-
 static void parsePlacement(const std::string& placement, char out[8][8]) { //парсим положение фигур из фен строки
     int x = 0, y = 7;
     for (char c : placement) {
@@ -981,4 +944,41 @@ std::pair<int, int> Board::getLastBlackFrom() const {
 std::pair<int, int> Board::getLastBlackTo() const {
     return lastBlackTo;
 
+}
+
+int Board::processWhiteMove()
+// return 0 — ход не сделан (fen не совпал)
+// return 1 — ход сделан успешно
+// return 2 — индекс вышел за границу (после хода)
+{
+    if (index + 1 >= fens.size()) {
+        loadPosFromFEN(fens[index], *repTextures);
+        return 2; // конца достигли
+    }
+
+    updateFen();
+
+    if (fenPos != fens[index + 1]) {
+        loadPosFromFEN(fens[index], *repTextures);
+        return 0; // FEN не совпал — откат
+    }
+
+    // сохраняем ход черных
+    if (index + 2 < fens.size()) {
+        auto coords = diffFenMove(fens[index + 1], fens[index + 2]);
+        lastBlackFrom = coords.first;
+        lastBlackTo = coords.second;
+    } else {
+        lastBlackFrom = {-2, -2}; // -2 чтобы не было видно в окне
+        lastBlackTo = {-2, -2};
+    }
+
+    index += 2;
+
+    if (index >= fens.size()) {
+        return 2; // больше нет ходов — конец
+    }
+
+    loadPosFromFEN(fens[index], *repTextures);
+    return 1;
 }

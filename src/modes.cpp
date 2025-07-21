@@ -172,7 +172,7 @@ void vsPlayerFisher(sf::RenderWindow& window,sf::Font& font, std::string savefil
     delete board; // отчищаем память от твоей доски 😥😥😣😣😥
 }
 
-void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam, std::string savefile){// отдельная функция для игры против компьютера
+void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, int difficult, figure::teams userTeam, std::string savefile){// отдельная функция для игры против компьютера
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -220,8 +220,7 @@ void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams u
         delete board;
         return;
     }
-    int dif = 20; //TODO сложность
-    std::string out = "setoption name Skill Level value " + std::to_string(dif);
+    std::string out = "setoption name Skill Level value " + std::to_string(difficult);
     engine.sendCommand(out);
     engine.sendCommand("uci"); //включаем протокол UCI 😎
     engine.sendCommand("isready"); //проверяем готовность
@@ -232,7 +231,7 @@ void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams u
                 moves += move + " ";
             }
 
-            engine.sendCommand(std::string("position fen ") + board->fenPos); //отправляем позицию движку
+            engine.sendCommand( savefile.empty() ? ("position startpos moves " + moves): (std::string("position fen ") + board->fenPos)); //отправляем позицию движку); //отправляем позицию движку
             engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
 
             std::string bestmove;//получаем лучший ход
@@ -350,7 +349,7 @@ void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, figure::teams u
     engine.stop();
 }
 
-void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam, std::string savefile){// отдельная функция для игры против компьютера
+void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, int difficult, figure::teams userTeam, std::string savefile){// отдельная функция для игры против компьютера
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -403,8 +402,7 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, figure::teams use
     }
     engine.sendCommand("uci"); //включаем протокол UCI 😎
     engine.sendCommand("setoption name UCI_Chess960 value true"); //запускаем фишера
-    int dif = 20; //TODO сложность
-    std::string out = "setoption name Skill Level value " + std::to_string(dif);
+    std::string out = "setoption name Skill Level value " + std::to_string(difficult);
     engine.sendCommand(out);
     engine.sendCommand("isready"); //проверяем готовность
     engine.sendCommand(std::string("position fen ") + board->fenPos); //сообщаем позицию боту
@@ -614,7 +612,7 @@ void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font, std::string savefil
     delete board; // отчищаем память от твоей доски 😥😥😣😣😥
 }
 
-void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams userTeam, std::string savefile){// отдельная функция для игры против компьютера
+void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, int difficult, figure::teams userTeam, std::string savefile){// отдельная функция для игры против компьютера
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -668,8 +666,7 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams use
         return;
     }
     engine.sendCommand("uci"); //включаем протокол UCI 😎
-    int dif = 20; //TODO сложность
-    std::string out = "setoption name Skill Level value " + std::to_string(dif);
+    std::string out = "setoption name Skill Level value " + std::to_string(difficult);
     engine.sendCommand(out);
     engine.sendCommand("isready"); //проверяем готовность
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
@@ -679,7 +676,7 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, figure::teams use
                 moves += move + " ";
             }
 
-            engine.sendCommand(std::string("position fen ") + board->fenPos); //отправляем позицию движку
+            engine.sendCommand( savefile.empty() ? ("position startpos moves " + moves): (std::string("position fen ") + board->fenPos));
             engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
 
             std::string bestmove;//получаем лучший ход
@@ -841,6 +838,8 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
     sf::RectangleShape container; // прямоугольник в котором все кнопки в меню выбора
 
     sf::RectangleShape nextModeBtnShape; // кнопка перехода на след режим
+    nextModeBtnShape = makeButton(25,700,sf::Color(0,255,0),sf::Color(0,0,0));
+    nextModeBtnShape.setPosition(OFFSETX*1.5+CELLSIZE*8,OFFSETY+CELLSIZE*4);
 
     sf::RectangleShape choosedCellRect(sf::Vector2f(CELLSIZE, CELLSIZE)); // квадратик отображающий клетку выбраную
     choosedCellRect.setFillColor(sf::Color(0, 255, 0, 80)); // цвет
@@ -1000,7 +999,7 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                 createChoiceMenu(board, to_choose, rectangles_to_choose, textures, OFFSETX, OFFSETY, CELLSIZE); // создаем и отрисовываем меню выбора
                 drawChoiceMenu(window, to_choose, rectangles_to_choose);
             }
-            
+            nextModeBtnShape.setFillColor(sf::Color::Blue);
             drawNextModeButton(window,nextModeBtnShape,font,CELLSIZE,OFFSETX,OFFSETY); // отрисовываем кнопку перехода к след режиму
         }
         window.display(); // показывалось окно чтобы
@@ -1083,6 +1082,9 @@ void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuz
 
                     if (moved) { // если походили тоесть applyMoveifValid вернуло true
                         int result = board->processWhiteMove(); // проверяем ход
+                        hasMoved = true;
+                        lastMoveFrom.setPosition((board->getLastBlackFrom()).first*CELLSIZE+OFFSETX,(7-(board->getLastBlackFrom()).second)*CELLSIZE+OFFSETY);
+                        lastMoveTo.setPosition((board->getLastBlackTo()).first*CELLSIZE+OFFSETX,(7-(board->getLastBlackTo()).second)*CELLSIZE+OFFSETY);
                         if (result == 0) { // был не туда ход
                             win = false; 
                             endGameScreen = true;
