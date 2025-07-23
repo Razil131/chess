@@ -31,7 +31,7 @@ void createChooseFigureMenuCreatePuzzle(sf::RenderWindow& window,
     float menuY = baseY - menuH - padding;
 
     if (menuX < 0) menuX = padding;
-    if (menuX + menuW > window.getSize().x) menuX = window.getSize().x - menuW - padding;
+    if (menuX + menuW > window.getSize().x) menuX = window.getSize().x - menuW - padding - 30; // -30 чтобы не налезало на кнопку далее
     if (menuY < 0) menuY = baseY + padding;
     if (menuY + menuH > window.getSize().y) menuY = window.getSize().y - menuH - padding;
 

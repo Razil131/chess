@@ -413,7 +413,7 @@ void createMainMenu(sf::RenderWindow& window, sf::Font& font){ // перенес
         if (needToQuitMenuFlag)
             break;
     }
-    if (createFlag)  // запускаем функцию подходящию под выбранные настройки
+    if (createFlag or editingPuzzleNum != "-1")  // запускаем функцию подходящию под выбранные настройки
         createPuzzle(window,font,editingPuzzleNum);// если editingPuzzleNum != -1 то это изменение пазла иначе создание
     else if (solvingPuzzleNum != "-1")
         solvePuzzle(window,font,solvingPuzzleNum);       
