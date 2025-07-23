@@ -16,4 +16,16 @@ debug_utils.cpp
 debug_utils.hpp
 stockfish
 saves/
-puzzles/
+# игнорировать все puzzle_*.fen
+/puzzles/puzzle_*.fen
+# но не игнорировать первые 10
+!/puzzles/puzzle_001.fen
+!/puzzles/puzzle_002.fen
+!/puzzles/puzzle_003.fen
+!/puzzles/puzzle_004.fen
+!/puzzles/puzzle_005.fen
+!/puzzles/puzzle_006.fen
+!/puzzles/puzzle_007.fen
+!/puzzles/puzzle_008.fen
+!/puzzles/puzzle_009.fen
+!/puzzles/puzzle_010.fen

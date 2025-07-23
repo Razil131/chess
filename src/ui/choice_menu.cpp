@@ -55,7 +55,7 @@ void drawChoiceMenu(sf::RenderWindow& window,std::vector<sf::Sprite>& to_choose,
 }
 
 // выбрать и превратить фигуру
-void selectFigureToConvert(Board* board,
+bool selectFigureToConvert(Board* board,
     const std::vector<sf::RectangleShape> rectangles_to_choose,
     const sf::Vector2f& mousePos,
     std::map<std::string, sf::Texture>& textures,
@@ -68,17 +68,18 @@ void selectFigureToConvert(Board* board,
             switch (rect_col){
                 case (0): // первый квадрат то делаем королевой так как ее спрайт в первом квадрате
                     board->convertPawn(board->convertPosition.first, board->convertPosition.second, figure::QUEEN, col==figure::WHITE ? textures["qw"] : textures["qb"]);
-                    break;
+                    return true;
                 case(1): // второй квадрат и так далее
                     board->convertPawn(board->convertPosition.first, board->convertPosition.second, figure::BISHOP, col==figure::WHITE ? textures["bw"] : textures["bb"]);
-                    break;
+                    return true;
                 case(2):
                     board->convertPawn(board->convertPosition.first, board->convertPosition.second, figure::KNIGHT, col==figure::WHITE ? textures["nw"] : textures["nb"]);
-                    break;
+                    return true;
                 case(3):
                     board->convertPawn(board->convertPosition.first, board->convertPosition.second, figure::ROOK, col==figure::WHITE ? textures["rw"] : textures["rb"]);
-                    break;
+                    return true;
             }
         }
     }
+    return false;
 }

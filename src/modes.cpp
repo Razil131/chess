@@ -802,10 +802,9 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, int difficult, fi
     delete board; // отчищаем память от твоей доски 😥😥😣😣😥
     engine.stop();
 }
-// TODO разбить этот код на функции а то чет слишком много повторов
 
 // открыть меню создания задачи
-void createPuzzle(sf::RenderWindow& window,sf::Font& font){
+void createPuzzle(sf::RenderWindow& window,sf::Font& font, std::string puzzleNum){
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -827,7 +826,12 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
     std::map<std::string, sf::Texture> textures; // мапа текстур
     loadTextures(textures);
     Board* board = new Board();  // создание твоей доски (❁´◡`❁)
-    board->clear();
+    if (puzzleNum != "-1"){ // если редачим то загружаем из файла иначе отчищаем
+        newPuzzleFileName = makePuzzleFilename(puzzleNum);
+        board->loadFirstFenAndDeleteFile(newPuzzleFileName,textures);
+    }
+    else
+        board->clear();
 
     std::pair<int,int> selectedCell = std::make_pair(-1,-1); // выбраная клетка на которую ставить будем фигуру
     bool cellIsSelected = false; 
@@ -931,7 +935,7 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                 drawChooseFigureMenuCreatePuzzle(window,container,figureSpritesToChoose,rectanglesToChoose);
             }
         }
-        // TODO сделать чтобы что то как то изменялось и видно было что теперь не расставляем фигуры
+
         else if(currentMode == Game){ // если второй режим там где ходить надо
             sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
             while (window.pollEvent(event)) { // получаем постоянно событие какое то
@@ -944,9 +948,11 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                         delete board;
                         createMainMenu(window,font);
                     }
-                    if (board->convertFlag){
-                        selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE); // выбираем и превращаем
-                        continue;
+                    if (board->convertFlag){ 
+                        if (selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE)) // выбираем и превращаем
+                            board->logFen(newPuzzleFileName);// если превращение произошло то сохраняем позицию
+                        else
+                            continue;
                     }
                     if (!isFigureSelected) { // если фигура еще не выбрана
                         selectFigure(mousePos, board, // пытаемся выбрать фигуру по всем фигурам проходимся и смотрим (убрано в отдельную функцию)
@@ -962,7 +968,8 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                         );
 
                         if (moved) { // если походили тоесть applyMoveifValid вернуло true
-                            board->logFen(newPuzzleFileName);
+                            if (!(board->convertFlag) or !(selectedFigure->getTeam() == figure::BLACK)) // если не было превращение или превращается черная фигура то сохраняем
+                                board->logFen(newPuzzleFileName);
                             isFigureSelected = false; // фигура не выбрана
                             selectedFigure = nullptr; 
                             possibleMoves.clear(); // возможных ходов нет
@@ -1032,6 +1039,8 @@ void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuz
     figure* selectedFigure = nullptr; 
     std::vector<std::pair<int, int>> possibleMoves; // возможные ходы для выбранной фигуры
 
+    bool needToCheckPositions = false; // нужно сравнить с сохранением после превращения
+
     bool endGameScreen=false; // должен ли быть экран завершения игры?
     bool win;
     sf::RectangleShape newGameButtonRect; // прямоугольник для начала новой игры
@@ -1064,8 +1073,10 @@ void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuz
                 }
                 // если пешка на клетке для превращения
                 if (board->convertFlag){
-                    selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE); // выбираем и превращаем #FIXME меню выбора ломает все
-                    continue;
+                    if (!selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE)) // если не превратилась еще то пропускаем иначе сравнием позиции
+                        continue;
+                    else
+                        needToCheckPositions = true;
                 }
                 if (!isFigureSelected) { // если фигура еще не выбрана
                     selectFigure(mousePos, board, // пытаемся выбрать фигуру по всем фигурам проходимся и смотрим (убрано в отдельную функцию)
@@ -1082,9 +1093,6 @@ void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuz
 
                     if (moved) { // если походили тоесть applyMoveifValid вернуло true
                         int result = board->processWhiteMove(); // проверяем ход
-                        hasMoved = true;
-                        lastMoveFrom.setPosition((board->getLastBlackFrom()).first*CELLSIZE+OFFSETX,(7-(board->getLastBlackFrom()).second)*CELLSIZE+OFFSETY);
-                        lastMoveTo.setPosition((board->getLastBlackTo()).first*CELLSIZE+OFFSETX,(7-(board->getLastBlackTo()).second)*CELLSIZE+OFFSETY);
                         if (result == 0) { // был не туда ход
                             win = false; 
                             endGameScreen = true;
@@ -1093,6 +1101,9 @@ void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuz
                             win = true;
                             endGameScreen = true;
                         }
+                        hasMoved = !board->convertFlag;
+                        lastMoveFrom.setPosition((board->getLastBlackFrom()).first*CELLSIZE+OFFSETX,(7-(board->getLastBlackFrom()).second)*CELLSIZE+OFFSETY);
+                        lastMoveTo.setPosition((board->getLastBlackTo()).first*CELLSIZE+OFFSETX,(7-(board->getLastBlackTo()).second)*CELLSIZE+OFFSETY);
                         isFigureSelected = false; // фигура не выбрана
                         selectedFigure = nullptr; 
                         possibleMoves.clear(); // возможных ходов нет
@@ -1112,6 +1123,18 @@ void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuz
         if (hasMoved) { // если ход был рисуем зеленые квадраты на последнем ходу
             window.draw(lastMoveFrom);
             window.draw(lastMoveTo);
+        }
+        if (needToCheckPositions){
+            int result = board->processWhiteMove();
+             if (result == 0) { // был не туда ход
+                win = false; 
+                endGameScreen = true;
+            }
+            else if (result == 2) { // ходы закончились
+                win = true;
+                endGameScreen = true;
+            }
+            needToCheckPositions = false;
         }
         if (board->isKingInCheck(figure::BLACK)){ // если какому нибудь королю стоит шах нарисовать красный квадрат на нем
             drawCheck(window,board,figure::BLACK,OFFSETX,OFFSETY,CELLSIZE);
