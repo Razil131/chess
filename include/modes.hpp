@@ -27,7 +27,7 @@ void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font, std::string savefil
 void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, int difficult, figure::teams userTeam = figure::WHITE, std::string savefile = "");
 
 // открыть меню создания задач
-void createPuzzle(sf::RenderWindow& window,sf::Font& font);
+void createPuzzle(sf::RenderWindow& window,sf::Font& font, std::string puzzleNum = "");
 
 // начать решать пазл
 void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuzzleNum);

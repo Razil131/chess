@@ -19,7 +19,7 @@ void createChoiceMenu(const Board* board,
 void drawChoiceMenu(sf::RenderWindow& window,std::vector<sf::Sprite>& to_choose, std::vector<sf::RectangleShape> rectangles_to_choose);
 
 // кликнуть по фигуре в меню выбора
-void selectFigureToConvert(Board* board,
+bool selectFigureToConvert(Board* board,
     const std::vector<sf::RectangleShape> rectangles_to_choose,
     const sf::Vector2f& mousePos,
     std::map<std::string, sf::Texture>& textures,

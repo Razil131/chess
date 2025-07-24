@@ -225,80 +225,82 @@ void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, int difficult, 
     engine.sendCommand("uci"); //включаем протокол UCI 😎
     engine.sendCommand("isready"); //проверяем готовность
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
-        if (board->getCurrentTeam() != userTeam) { //проверяем когда ходит бот
-            std::string moves; 
-            for (const auto& move : board->movesUCI) { //переводим ходы из наших координат в е2е4 условные
-                moves += move + " ";
-            }
-
-            engine.sendCommand( savefile.empty() ? ("position startpos moves " + moves): (std::string("position fen ") + board->fenPos)); //отправляем позицию движку); //отправляем позицию движку
-            engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
-
-            std::string bestmove;//получаем лучший ход
-            do {
-                auto resp = engine.readLine();
-                if (resp.find("bestmove") != std::string::npos) {
-                size_t start = resp.find("bestmove") + 9;
-                size_t end = resp.find(' ', start);
-                bestmove = (end == std::string::npos) ? resp.substr(start) : resp.substr(start, end - start);
+        if (!endGameScreen){
+            if (board->getCurrentTeam() != userTeam) { //проверяем когда ходит бот
+                std::string moves; 
+                for (const auto& move : board->movesUCI) { //переводим ходы из наших координат в е2е4 условные
+                    moves += move + " ";
                 }
-            } while (bestmove.empty());
 
-            if (bestmove == "resign") {
-                endGameScreen=true; // чет написал когда сдается но хз как проверить работает ли но вроде должно
-                drawEndGameScreen(window,userTeam, font, newGameButtonRect);
-            }
+                engine.sendCommand( savefile.empty() ? ("position startpos moves " + moves): (std::string("position fen ") + board->fenPos)); //отправляем позицию движку); //отправляем позицию движку
+                engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
 
-            //парсим координаты
-            int fx, fy, tx, ty;
-            char prom = '\0';
-            if (bestmove.length() >= 4) {
-                fx = bestmove[0] - 'a';
-                fy = bestmove[1] - '1';
-                tx = bestmove[2] - 'a';
-                ty = bestmove[3] - '1';
-                
-                if (bestmove.length() >= 5) {// символ превращения
-                    prom = bestmove[4];
+                std::string bestmove;//получаем лучший ход
+                do {
+                    auto resp = engine.readLine();
+                    if (resp.find("bestmove") != std::string::npos) {
+                    size_t start = resp.find("bestmove") + 9;
+                    size_t end = resp.find(' ', start);
+                    bestmove = (end == std::string::npos) ? resp.substr(start) : resp.substr(start, end - start);
                     }
-                } 
-                
-                if (board->makeMove({fx, fy}, {tx, ty})){//выполняем ход
-                    lastMoveFrom.setPosition(
-                    OFFSETX + fx * CELLSIZE,
-                    OFFSETY + (7 - fy) * CELLSIZE
-                    );
-                    lastMoveTo.setPosition(
-                        OFFSETX + tx * CELLSIZE,
-                        OFFSETY + (7 - ty) * CELLSIZE
-                    );
+                } while (bestmove.empty());
+
+                if (bestmove == "resign") {
+                    endGameScreen=true; // чет написал когда сдается но хз как проверить работает ли но вроде должно
+                    drawEndGameScreen(window,userTeam, font, newGameButtonRect);
                 }
 
-                
-                if (prom != '\0') {
-                figure::figureTypes newType;
-                switch (prom) {
-                    case 'r': newType = figure::ROOK; break;
-                    case 'b': newType = figure::BISHOP; break;
-                    case 'n': newType = figure::KNIGHT; break;
-                    case 'q': 
-                    default: newType = figure::QUEEN;
+                //парсим координаты
+                int fx, fy, tx, ty;
+                char prom = '\0';
+                if (bestmove.length() >= 4) {
+                    fx = bestmove[0] - 'a';
+                    fy = bestmove[1] - '1';
+                    tx = bestmove[2] - 'a';
+                    ty = bestmove[3] - '1';
+                    
+                    if (bestmove.length() >= 5) {// символ превращения
+                        prom = bestmove[4];
+                        }
+                    } 
+                    
+                    if (board->makeMove({fx, fy}, {tx, ty})){//выполняем ход
+                        lastMoveFrom.setPosition(
+                        OFFSETX + fx * CELLSIZE,
+                        OFFSETY + (7 - fy) * CELLSIZE
+                        );
+                        lastMoveTo.setPosition(
+                            OFFSETX + tx * CELLSIZE,
+                            OFFSETY + (7 - ty) * CELLSIZE
+                        );
+                    }
+
+                    
+                    if (prom != '\0') {
+                    figure::figureTypes newType;
+                    switch (prom) {
+                        case 'r': newType = figure::ROOK; break;
+                        case 'b': newType = figure::BISHOP; break;
+                        case 'n': newType = figure::KNIGHT; break;
+                        case 'q': 
+                        default: newType = figure::QUEEN;
+                    }
+
+                    std::string teamChar = (userTeam == figure::WHITE) ? "b" : "w"; //определяем команду бота
+                    std::string textureName;
+                    switch (newType) {
+                        case figure::QUEEN: textureName = "q" + teamChar; break;
+                        case figure::ROOK: textureName = "r" + teamChar; break;
+                        case figure::BISHOP: textureName = "b" + teamChar; break;
+                        case figure::KNIGHT: textureName = "n" + teamChar; break;
+                        default: textureName = "q" + teamChar;
+                    }
+
+                    board->convertPawn(tx, ty, newType, textures[textureName]); //превращаем
+                    
+
+                    board->convertFlag = false;
                 }
-
-                std::string teamChar = (userTeam == figure::WHITE) ? "b" : "w"; //определяем команду бота
-                std::string textureName;
-                switch (newType) {
-                    case figure::QUEEN: textureName = "q" + teamChar; break;
-                    case figure::ROOK: textureName = "r" + teamChar; break;
-                    case figure::BISHOP: textureName = "b" + teamChar; break;
-                    case figure::KNIGHT: textureName = "n" + teamChar; break;
-                    default: textureName = "q" + teamChar;
-                }
-
-                board->convertPawn(tx, ty, newType, textures[textureName]); //превращаем
-                
-
-                board->convertFlag = false;
             }
         }
         processEvents(window, font, board, 1, 1, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
@@ -411,61 +413,63 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, int difficult, fi
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
         
         processEvents(window, font, board, 2, 1, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE, &rightCastle, &leftCastle); // обрабатываем все возможные события клик мыши и тд
-        if (board->getCurrentTeam() != userTeam) { //формируем строку всех предыдущих ходов
-        std::string moves;
-        for (const auto& m : board->movesUCI) {
-            moves += m + " ";
-        }
-        engine.sendCommand("position fen " + board->fenPos + " moves " + moves); //отправляем движку позицию и ждём ход
-        engine.sendCommand("go movetime 1000");
-
-        std::string bestmove;
-        do {
-            auto resp = engine.readLine();
-            auto p = resp.find("bestmove");
-            if (p != std::string::npos) {
-                size_t s = p + 9, e = resp.find(' ', s);
-                bestmove = (e == std::string::npos)
-                           ? resp.substr(s)
-                           : resp.substr(s, e - s);
+        if (!endGameScreen){
+            if (board->getCurrentTeam() != userTeam) { //формируем строку всех предыдущих ходов
+            std::string moves;
+            for (const auto& m : board->movesUCI) {
+                moves += m + " ";
             }
-        } while (bestmove.empty());
+            engine.sendCommand("position fen " + board->fenPos + " moves " + moves); //отправляем движку позицию и ждём ход
+            engine.sendCommand("go movetime 1000");
 
-        //разбираем строку на наши коорды
-        int fx = bestmove[0] - 'a';
-        int fy = bestmove[1] - '1';
-        int tx = bestmove[2] - 'a';
-        int ty = bestmove[3] - '1';
-        char prom = bestmove.size() >= 5 ? bestmove[4] : '\0';
+            std::string bestmove;
+            do {
+                auto resp = engine.readLine();
+                auto p = resp.find("bestmove");
+                if (p != std::string::npos) {
+                    size_t s = p + 9, e = resp.find(' ', s);
+                    bestmove = (e == std::string::npos)
+                            ? resp.substr(s)
+                            : resp.substr(s, e - s);
+                }
+            } while (bestmove.empty());
 
-        //делаем ход
-        board->makeMove({fx, fy}, {tx, ty});
-         lastMoveFrom.setPosition(OFFSETX + fx * CELLSIZE,
-                                 OFFSETY + (7 - fy) * CELLSIZE);
-        lastMoveTo  .setPosition(OFFSETX + tx * CELLSIZE,
-                                 OFFSETY + (7 - ty) * CELLSIZE);
-        hasMoved = true;
+            //разбираем строку на наши коорды
+            int fx = bestmove[0] - 'a';
+            int fy = bestmove[1] - '1';
+            int tx = bestmove[2] - 'a';
+            int ty = bestmove[3] - '1';
+            char prom = bestmove.size() >= 5 ? bestmove[4] : '\0';
 
-        //превращение
-        if (prom) {
-            figure::figureTypes newType;
-            switch (prom) {
-                case 'r': newType = figure::ROOK;   break;
-                case 'b': newType = figure::BISHOP; break;
-                case 'n': newType = figure::KNIGHT; break;
-                case 'q': default:  newType = figure::QUEEN;
+            //делаем ход
+            board->makeMove({fx, fy}, {tx, ty});
+            lastMoveFrom.setPosition(OFFSETX + fx * CELLSIZE,
+                                    OFFSETY + (7 - fy) * CELLSIZE);
+            lastMoveTo  .setPosition(OFFSETX + tx * CELLSIZE,
+                                    OFFSETY + (7 - ty) * CELLSIZE);
+            hasMoved = true;
+
+            //превращение
+            if (prom) {
+                figure::figureTypes newType;
+                switch (prom) {
+                    case 'r': newType = figure::ROOK;   break;
+                    case 'b': newType = figure::BISHOP; break;
+                    case 'n': newType = figure::KNIGHT; break;
+                    case 'q': default:  newType = figure::QUEEN;
+                }
+                std::string tname = (userTeam == figure::WHITE ? "b" : "w");
+                switch (newType) {
+                    case figure::QUEEN:  tname = "q" + tname; break;
+                    case figure::ROOK:   tname = "r" + tname; break;
+                    case figure::BISHOP: tname = "b" + tname; break;
+                    case figure::KNIGHT: tname = "n" + tname; break;
+                    default: break;
+                }
+                board->convertPawn(tx, ty, newType, textures[tname]);
+            }      
+                board->convertFlag = false;       
             }
-            std::string tname = (userTeam == figure::WHITE ? "b" : "w");
-            switch (newType) {
-                case figure::QUEEN:  tname = "q" + tname; break;
-                case figure::ROOK:   tname = "r" + tname; break;
-                case figure::BISHOP: tname = "b" + tname; break;
-                case figure::KNIGHT: tname = "n" + tname; break;
-                default: break;
-            }
-            board->convertPawn(tx, ty, newType, textures[tname]);
-        }      
-            board->convertFlag = false;       
         }
 
         window.clear(sf::Color(128,128,128)); // отчищаем окно чтобы оно обновлялось цвет в скобках это цвет фона (серый)
@@ -587,11 +591,11 @@ void vsPlayer3Check(sf::RenderWindow& window,sf::Font& font, std::string savefil
 
         drawFigures(window, board, CELLSIZE, OFFSETX, OFFSETY); // рисуем фигуры
 
-        if (board->isKingInMate(figure::WHITE) or blackChecks>=3){ // если у кого то мат или пат рисуем экран конца игры
-            drawEndGameScreen(window,figure::BLACK,font, newGameButtonRect); 
+        if (board->isKingInMate(figure::BLACK) or blackChecks>=3){ // если у кого то мат или пат рисуем экран конца игры
+            drawEndGameScreen(window,figure::WHITE,font, newGameButtonRect); 
             endGameScreen=true;
-        }else if(board->isKingInMate(figure::BLACK) or whiteChecks>=3){
-            drawEndGameScreen(window,figure::WHITE,font, newGameButtonRect);
+        }else if(board->isKingInMate(figure::WHITE) or whiteChecks>=3){
+            drawEndGameScreen(window,figure::BLACK,font, newGameButtonRect);
             endGameScreen=true;
         }else if (board->isKingInStalemate(figure::WHITE) or board->isKingInStalemate(figure::BLACK)){
             drawEndGameScreen(window,figure::NONE,font, newGameButtonRect);
@@ -670,80 +674,82 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, int difficult, fi
     engine.sendCommand(out);
     engine.sendCommand("isready"); //проверяем готовность
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
-        if (board->getCurrentTeam() != userTeam) { //проверяем когда ходит бот
-            std::string moves; 
-            for (const auto& move : board->movesUCI) { //переводим ходы из наших координат в е2е4 условные
-                moves += move + " ";
-            }
-
-            engine.sendCommand( savefile.empty() ? ("position startpos moves " + moves): (std::string("position fen ") + board->fenPos));
-            engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
-
-            std::string bestmove;//получаем лучший ход
-            do {
-                auto resp = engine.readLine();
-                if (resp.find("bestmove") != std::string::npos) {
-                size_t start = resp.find("bestmove") + 9;
-                size_t end = resp.find(' ', start);
-                bestmove = (end == std::string::npos) ? resp.substr(start) : resp.substr(start, end - start);
+        if (!endGameScreen){
+            if (board->getCurrentTeam() != userTeam) { //проверяем когда ходит бот
+                std::string moves; 
+                for (const auto& move : board->movesUCI) { //переводим ходы из наших координат в е2е4 условные
+                    moves += move + " ";
                 }
-            } while (bestmove.empty());
 
-            if (bestmove == "resign") {
-                endGameScreen=true; // чет написал когда сдается но хз как проверить работает ли но вроде должно
-                drawEndGameScreen(window,userTeam, font, newGameButtonRect);
-            }
+                engine.sendCommand( savefile.empty() ? ("position startpos moves " + moves): (std::string("position fen ") + board->fenPos));
+                engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
 
-            //парсим координаты
-            int fx, fy, tx, ty;
-            char prom = '\0';
-            if (bestmove.length() >= 4) {
-                fx = bestmove[0] - 'a';
-                fy = bestmove[1] - '1';
-                tx = bestmove[2] - 'a';
-                ty = bestmove[3] - '1';
-                
-                if (bestmove.length() >= 5) {// символ превращения
-                    prom = bestmove[4];
+                std::string bestmove;//получаем лучший ход
+                do {
+                    auto resp = engine.readLine();
+                    if (resp.find("bestmove") != std::string::npos) {
+                    size_t start = resp.find("bestmove") + 9;
+                    size_t end = resp.find(' ', start);
+                    bestmove = (end == std::string::npos) ? resp.substr(start) : resp.substr(start, end - start);
                     }
-                } 
-                
-                if (board->makeMove({fx, fy}, {tx, ty})){//выполняем ход
-                    lastMoveFrom.setPosition(
-                    OFFSETX + fx * CELLSIZE,
-                    OFFSETY + (7 - fy) * CELLSIZE
-                    );
-                    lastMoveTo.setPosition(
-                        OFFSETX + tx * CELLSIZE,
-                        OFFSETY + (7 - ty) * CELLSIZE
-                    );
+                } while (bestmove.empty());
+
+                if (bestmove == "resign") {
+                    endGameScreen=true; // чет написал когда сдается но хз как проверить работает ли но вроде должно
+                    drawEndGameScreen(window,userTeam, font, newGameButtonRect);
                 }
 
-                
-                if (prom != '\0') {
-                figure::figureTypes newType;
-                switch (prom) {
-                    case 'r': newType = figure::ROOK; break;
-                    case 'b': newType = figure::BISHOP; break;
-                    case 'n': newType = figure::KNIGHT; break;
-                    case 'q': 
-                    default: newType = figure::QUEEN;
+                //парсим координаты
+                int fx, fy, tx, ty;
+                char prom = '\0';
+                if (bestmove.length() >= 4) {
+                    fx = bestmove[0] - 'a';
+                    fy = bestmove[1] - '1';
+                    tx = bestmove[2] - 'a';
+                    ty = bestmove[3] - '1';
+                    
+                    if (bestmove.length() >= 5) {// символ превращения
+                        prom = bestmove[4];
+                        }
+                    } 
+                    
+                    if (board->makeMove({fx, fy}, {tx, ty})){//выполняем ход
+                        lastMoveFrom.setPosition(
+                        OFFSETX + fx * CELLSIZE,
+                        OFFSETY + (7 - fy) * CELLSIZE
+                        );
+                        lastMoveTo.setPosition(
+                            OFFSETX + tx * CELLSIZE,
+                            OFFSETY + (7 - ty) * CELLSIZE
+                        );
+                    }
+
+                    
+                    if (prom != '\0') {
+                    figure::figureTypes newType;
+                    switch (prom) {
+                        case 'r': newType = figure::ROOK; break;
+                        case 'b': newType = figure::BISHOP; break;
+                        case 'n': newType = figure::KNIGHT; break;
+                        case 'q': 
+                        default: newType = figure::QUEEN;
+                    }
+
+                    std::string teamChar = (userTeam == figure::WHITE) ? "b" : "w"; //определяем команду бота
+                    std::string textureName;
+                    switch (newType) {
+                        case figure::QUEEN: textureName = "q" + teamChar; break;
+                        case figure::ROOK: textureName = "r" + teamChar; break;
+                        case figure::BISHOP: textureName = "b" + teamChar; break;
+                        case figure::KNIGHT: textureName = "n" + teamChar; break;
+                        default: textureName = "q" + teamChar;
+                    }
+
+                    board->convertPawn(tx, ty, newType, textures[textureName]); //превращаем
+                    
+
+                    board->convertFlag = false;
                 }
-
-                std::string teamChar = (userTeam == figure::WHITE) ? "b" : "w"; //определяем команду бота
-                std::string textureName;
-                switch (newType) {
-                    case figure::QUEEN: textureName = "q" + teamChar; break;
-                    case figure::ROOK: textureName = "r" + teamChar; break;
-                    case figure::BISHOP: textureName = "b" + teamChar; break;
-                    case figure::KNIGHT: textureName = "n" + teamChar; break;
-                    default: textureName = "q" + teamChar;
-                }
-
-                board->convertPawn(tx, ty, newType, textures[textureName]); //превращаем
-                
-
-                board->convertFlag = false;
             }
         }
         processEvents(window, font, board, 3, 1, endGameScreen, newGameButtonRect, isFigureSelected, selectedFigure, possibleMoves, lastMoveFrom, lastMoveTo, textures, to_choose, rectangles_to_choose, hasMoved, OFFSETX, OFFSETY, CELLSIZE); // обрабатываем все возможные события клик мыши и тд
@@ -802,10 +808,9 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, int difficult, fi
     delete board; // отчищаем память от твоей доски 😥😥😣😣😥
     engine.stop();
 }
-// TODO разбить этот код на функции а то чет слишком много повторов
 
 // открыть меню создания задачи
-void createPuzzle(sf::RenderWindow& window,sf::Font& font){
+void createPuzzle(sf::RenderWindow& window,sf::Font& font, std::string puzzleNum){
     const float CELLSIZE = 100.f; // размер клетки
     const float OFFSETX = 50.f; // отстпуп для букв слева
     const float OFFSETY = 50.f; // отступ для цифр снизу
@@ -827,7 +832,12 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
     std::map<std::string, sf::Texture> textures; // мапа текстур
     loadTextures(textures);
     Board* board = new Board();  // создание твоей доски (❁´◡`❁)
-    board->clear();
+    if (puzzleNum != "-1"){ // если редачим то загружаем из файла иначе отчищаем
+        newPuzzleFileName = makePuzzleFilename(puzzleNum);
+        board->loadFirstFenAndDeleteFile(newPuzzleFileName,textures);
+    }
+    else
+        board->clear();
 
     std::pair<int,int> selectedCell = std::make_pair(-1,-1); // выбраная клетка на которую ставить будем фигуру
     bool cellIsSelected = false; 
@@ -919,6 +929,18 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                         }
                     }
                 }
+                else if (event.type == sf::Event::MouseButtonPressed && // нажатие правой кнопки мыши
+                event.mouseButton.button == sf::Mouse::Right){
+                    sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y); // получаем положение курсора
+                    for (int x = 0; x<8; x++){
+                        for (int y = 0; y<8; y++){// по всем клеткам проходимся
+                            if (boardRectangles[x][y].getGlobalBounds().contains(mousePos)){
+                                board->removeFigure(x,7-y); // убираем фигуру на выбранной клетке
+                                break;
+                            }
+                        }
+                    }
+                }
             }
             
             drawBoardAndLabels(window,boardRectangles,letters,numbers);
@@ -931,7 +953,7 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                 drawChooseFigureMenuCreatePuzzle(window,container,figureSpritesToChoose,rectanglesToChoose);
             }
         }
-        // TODO сделать чтобы что то как то изменялось и видно было что теперь не расставляем фигуры
+
         else if(currentMode == Game){ // если второй режим там где ходить надо
             sf::Event event;  // какое событие происходит сейчас клик мыши или закрытие окно
             while (window.pollEvent(event)) { // получаем постоянно событие какое то
@@ -944,9 +966,11 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                         delete board;
                         createMainMenu(window,font);
                     }
-                    if (board->convertFlag){
-                        selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE); // выбираем и превращаем
-                        continue;
+                    if (board->convertFlag){ 
+                        if (selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE)) // выбираем и превращаем
+                            board->logFen(newPuzzleFileName);// если превращение произошло то сохраняем позицию
+                        else
+                            continue;
                     }
                     if (!isFigureSelected) { // если фигура еще не выбрана
                         selectFigure(mousePos, board, // пытаемся выбрать фигуру по всем фигурам проходимся и смотрим (убрано в отдельную функцию)
@@ -962,7 +986,8 @@ void createPuzzle(sf::RenderWindow& window,sf::Font& font){
                         );
 
                         if (moved) { // если походили тоесть applyMoveifValid вернуло true
-                            board->logFen(newPuzzleFileName);
+                            if (!(board->convertFlag) or !(selectedFigure->getTeam() == figure::BLACK)) // если не было превращение или превращается черная фигура то сохраняем
+                                board->logFen(newPuzzleFileName);
                             isFigureSelected = false; // фигура не выбрана
                             selectedFigure = nullptr; 
                             possibleMoves.clear(); // возможных ходов нет
@@ -1032,6 +1057,8 @@ void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuz
     figure* selectedFigure = nullptr; 
     std::vector<std::pair<int, int>> possibleMoves; // возможные ходы для выбранной фигуры
 
+    bool needToCheckPositions = false; // нужно сравнить с сохранением после превращения
+
     bool endGameScreen=false; // должен ли быть экран завершения игры?
     bool win;
     sf::RectangleShape newGameButtonRect; // прямоугольник для начала новой игры
@@ -1064,8 +1091,10 @@ void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuz
                 }
                 // если пешка на клетке для превращения
                 if (board->convertFlag){
-                    selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE); // выбираем и превращаем #FIXME меню выбора ломает все
-                    continue;
+                    if (!selectFigureToConvert(board, rectangles_to_choose, mousePos, textures, OFFSETX, CELLSIZE)) // если не превратилась еще то пропускаем иначе сравнием позиции
+                        continue;
+                    else
+                        needToCheckPositions = true;
                 }
                 if (!isFigureSelected) { // если фигура еще не выбрана
                     selectFigure(mousePos, board, // пытаемся выбрать фигуру по всем фигурам проходимся и смотрим (убрано в отдельную функцию)
@@ -1082,9 +1111,6 @@ void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuz
 
                     if (moved) { // если походили тоесть applyMoveifValid вернуло true
                         int result = board->processWhiteMove(); // проверяем ход
-                        hasMoved = true;
-                        lastMoveFrom.setPosition((board->getLastBlackFrom()).first*CELLSIZE+OFFSETX,(7-(board->getLastBlackFrom()).second)*CELLSIZE+OFFSETY);
-                        lastMoveTo.setPosition((board->getLastBlackTo()).first*CELLSIZE+OFFSETX,(7-(board->getLastBlackTo()).second)*CELLSIZE+OFFSETY);
                         if (result == 0) { // был не туда ход
                             win = false; 
                             endGameScreen = true;
@@ -1093,6 +1119,9 @@ void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuz
                             win = true;
                             endGameScreen = true;
                         }
+                        hasMoved = !board->convertFlag;
+                        lastMoveFrom.setPosition((board->getLastBlackFrom()).first*CELLSIZE+OFFSETX,(7-(board->getLastBlackFrom()).second)*CELLSIZE+OFFSETY);
+                        lastMoveTo.setPosition((board->getLastBlackTo()).first*CELLSIZE+OFFSETX,(7-(board->getLastBlackTo()).second)*CELLSIZE+OFFSETY);
                         isFigureSelected = false; // фигура не выбрана
                         selectedFigure = nullptr; 
                         possibleMoves.clear(); // возможных ходов нет
@@ -1112,6 +1141,18 @@ void solvePuzzle(sf::RenderWindow& window,sf::Font& font, std::string solvingPuz
         if (hasMoved) { // если ход был рисуем зеленые квадраты на последнем ходу
             window.draw(lastMoveFrom);
             window.draw(lastMoveTo);
+        }
+        if (needToCheckPositions){
+            int result = board->processWhiteMove();
+             if (result == 0) { // был не туда ход
+                win = false; 
+                endGameScreen = true;
+            }
+            else if (result == 2) { // ходы закончились
+                win = true;
+                endGameScreen = true;
+            }
+            needToCheckPositions = false;
         }
         if (board->isKingInCheck(figure::BLACK)){ // если какому нибудь королю стоит шах нарисовать красный квадрат на нем
             drawCheck(window,board,figure::BLACK,OFFSETX,OFFSETY,CELLSIZE);

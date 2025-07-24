@@ -42,6 +42,7 @@ public:
     std::pair<int,int> getLastBlackFrom() const; //геттеры для позиции черных
     std::pair<int,int> getLastBlackTo() const;
     int processWhiteMove(); //вызывается после каждого хода белых для сверки позиции
+    bool loadFirstFenAndDeleteFile(const std::string& filename, std::map<std::string, sf::Texture>& textures); // считать первую строку сохранения и удалить его для изменения задач
 
 
 

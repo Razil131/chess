@@ -972,13 +972,45 @@ int Board::processWhiteMove()
         lastBlackFrom = {-2, -2}; // -2 чтобы не было видно в окне
         lastBlackTo = {-2, -2};
     }
+    if (!convertFlag or getFigure(convertPosition)->getTeam() == figure::BLACK) // если щас должно быть превращение фигуры то 1 ход иначе 2 хода
+        index += 2;
+    else
+        index += 1;
 
-    index += 2;
-
-    if (index >= fens.size()) {
-        return 2; // больше нет ходов — конец
-    }
-
+    if (index >= fens.size()) 
+        return 2; // больше нет ходов - конец
     loadPosFromFEN(fens[index], *repTextures);
     return 1;
+}
+
+// считать первую строку сохранения и удалить его для изменения задач
+bool Board::loadFirstFenAndDeleteFile(const std::string& filename, std::map<std::string, sf::Texture>& textures) {
+    std::filesystem::path saveDir = std::filesystem::current_path().parent_path() / "puzzles";
+    std::filesystem::path fullpath = saveDir / filename;
+
+    std::ifstream in(fullpath);
+    if (!in.is_open()) return false;
+
+    std::string firstLine;
+    while (std::getline(in, firstLine)) {
+        if (!firstLine.empty()) break;
+    }
+    in.close();
+
+    if (firstLine.empty()) return false;
+
+    // попробуем загрузить FEN
+    bool success = loadPosFromFEN(firstLine, textures);
+
+    // удаляем файл если загрузка прошла успешно
+    if (success) {
+        std::error_code ec;
+        std::filesystem::remove(fullpath, ec);
+        if (ec) {
+            std::cerr << "Failed to delete file: " << fullpath << " Error: " << ec.message() << std::endl;
+            return false;
+        }
+    }
+
+    return success;
 }
