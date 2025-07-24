@@ -10,7 +10,7 @@ rook::rook(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп ко�
         iconPath = (team == WHITE) ? "/materials/rw.png" : "/materials/rb.png";
 
         sprite.setTexture(texture);
-        sprite.setScale(1.2f, 1.2f);
+        sprite.setScale(0.15f, 0.15f);
 }
 
 std::vector<std::pair<int, int>> rook::get_available_moves(const Board& board) { 

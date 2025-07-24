@@ -10,7 +10,7 @@ bishop::bishop(teams t, std::pair<int,int> p, sf::Texture& texture) { // доп 
         iconPath = (team == WHITE) ? "/materials/bw.png" : "/materials/bb.png";
         
         sprite.setTexture(texture);
-        sprite.setScale(1.2f, 1.2f);
+        sprite.setScale(0.15f, 0.15f);
 }
 
 std::vector<std::pair<int, int>> bishop::get_available_moves(const Board& board) {

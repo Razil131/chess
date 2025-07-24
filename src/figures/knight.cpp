@@ -9,7 +9,7 @@ knight::knight(teams t, std::pair<int,int> p,sf::Texture& texture) { // доп �
         iconPath = (team == WHITE) ? "/materials/nw.png" : "/materials/nb.png";
 
         sprite.setTexture(texture);
-        sprite.setScale(1.2f, 1.2f);
+        sprite.setScale(0.15f, 0.15f);
 }
 
 std::vector<std::pair<int, int>> knight::get_available_moves(const Board& board) {

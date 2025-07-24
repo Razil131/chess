@@ -26,7 +26,7 @@ void createChoiceMenu(
     for (int i = 0; i < types.size(); i++) {
         sf::Sprite sprite; // создаем спрайт фигуры
         sprite.setTexture(textures[types[i] + colorPrefix]);
-        sprite.setScale(1.2f, 1.2f);
+        sprite.setScale(0.15f, 0.15f);
 
         float x = OFFSETX + (2 + i) * CELLSIZE + 10;
         float y = OFFSETY + 3.5f * CELLSIZE;
