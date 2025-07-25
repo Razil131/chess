@@ -220,10 +220,11 @@ void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, int difficult, 
         delete board;
         return;
     }
+    engine.sendCommand("uci"); //включаем протокол UCI 😎
     std::string out = "setoption name Skill Level value " + std::to_string(difficult);
     engine.sendCommand(out);
-    engine.sendCommand("uci"); //включаем протокол UCI 😎
     engine.sendCommand("isready"); //проверяем готовность
+    std::string time = "go movetime " + std::to_string(difficult * 200);
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
         if (!endGameScreen){
             if (board->getCurrentTeam() != userTeam) { //проверяем когда ходит бот
@@ -231,9 +232,8 @@ void vsComputerStandart(sf::RenderWindow& window,sf::Font& font, int difficult, 
                 for (const auto& move : board->movesUCI) { //переводим ходы из наших координат в е2е4 условные
                     moves += move + " ";
                 }
-
                 engine.sendCommand( savefile.empty() ? ("position startpos moves " + moves): (std::string("position fen ") + board->fenPos)); //отправляем позицию движку); //отправляем позицию движку
-                engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
+                engine.sendCommand(time); //даем подумать секунду, по идее тут можно поменять на диф
 
                 std::string bestmove;//получаем лучший ход
                 do {
@@ -407,6 +407,7 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, int difficult, fi
     std::string out = "setoption name Skill Level value " + std::to_string(difficult);
     engine.sendCommand(out);
     engine.sendCommand("isready"); //проверяем готовность
+    std::string time = "go movetime " + std::to_string(difficult * 200);
     engine.sendCommand(std::string("position fen ") + board->fenPos); //сообщаем позицию боту
 
 
@@ -420,7 +421,7 @@ void vsComputerFisher(sf::RenderWindow& window,sf::Font& font, int difficult, fi
                 moves += m + " ";
             }
             engine.sendCommand("position fen " + board->fenPos + " moves " + moves); //отправляем движку позицию и ждём ход
-            engine.sendCommand("go movetime 1000");
+            engine.sendCommand(time);
 
             std::string bestmove;
             do {
@@ -673,6 +674,7 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, int difficult, fi
     std::string out = "setoption name Skill Level value " + std::to_string(difficult);
     engine.sendCommand(out);
     engine.sendCommand("isready"); //проверяем готовность
+    std::string time = "go movetime " + std::to_string(difficult * 200);
     while (window.isOpen()) { // основной цикл постоянно повторяется пока окно открыто
         if (!endGameScreen){
             if (board->getCurrentTeam() != userTeam) { //проверяем когда ходит бот
@@ -682,7 +684,7 @@ void vsComputer3Check(sf::RenderWindow& window,sf::Font& font, int difficult, fi
                 }
 
                 engine.sendCommand( savefile.empty() ? ("position startpos moves " + moves): (std::string("position fen ") + board->fenPos));
-                engine.sendCommand("go movetime 1000"); //даем подумать секунду, по идее тут можно поменять на диф
+                engine.sendCommand(time); //даем подумать секунду
 
                 std::string bestmove;//получаем лучший ход
                 do {
